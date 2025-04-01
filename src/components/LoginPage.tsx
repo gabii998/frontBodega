@@ -20,7 +20,7 @@ const LoginPage = () => {
       await login(email, password);
       // Redireccionar al dashboard después de iniciar sesión
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Usuario o contraseña incorrectos');
     } finally {
       setIsLoading(false);
