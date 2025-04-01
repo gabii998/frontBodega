@@ -1,0 +1,25 @@
+
+
+// -------------------- CONFIGURACIÓN ADICIONAL --------------------
+
+// src/main/kotlin/com/bodega/api/config/ModificacionBD.sql
+/*
+-- Añadir campo nombre a la tabla cuartel si no existe
+ALTER TABLE `bodega`.`cuartel` 
+ADD COLUMN IF NOT EXISTS `nombre` VARCHAR(45) NULL AFTER `idCuartel`;
+
+-- Añadir campo idVariedad a la tabla jornal si no existe
+ALTER TABLE `bodega`.`jornal` 
+ADD COLUMN IF NOT EXISTS `idVariedad` INT NULL AFTER `cargadoPor`,
+ADD INDEX IF NOT EXISTS `variedad_idx` (`idVariedad` ASC) VISIBLE;
+
+-- Añadir constraint de clave foránea si no existe
+ALTER TABLE `bodega`.`jornal` 
+ADD CONSTRAINT `variedad`
+  FOREIGN KEY (`idVariedad`)
+  REFERENCES `bodega`.`variedadUva` (`idVariedad`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+*/
+
+// src/main/kotlin/com/bodega/api/config/DataInitializer.kt
