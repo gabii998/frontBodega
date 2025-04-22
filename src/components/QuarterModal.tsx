@@ -38,9 +38,21 @@ interface QuarterModalProps {
   onSave: (quarter: Quarter) => void;
   quarter?: Quarter;
   isLoading?: boolean;
+  availableVarieties: Variety[];
+  availableEmployees: Employee[];
+  activeFarmId: number;
 }
 
-const QuarterModal = ({ isOpen, onClose, onSave, quarter, isLoading = false }: QuarterModalProps) => {
+const QuarterModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  quarter, 
+  isLoading = false,
+  availableVarieties,
+  availableEmployees,
+  activeFarmId
+}: QuarterModalProps) => {
   const [formData, setFormData] = useState<Quarter>({
     name: '',
     varieties: [],
@@ -50,94 +62,24 @@ const QuarterModal = ({ isOpen, onClose, onSave, quarter, isLoading = false }: Q
     system: 'parral'
   });
 
-  const [availableVarieties, setAvailableVarieties] = useState<Variety[]>([]);
-  const [availableEmployees, setAvailableEmployees] = useState<Employee[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showNewVarietyForm, setShowNewVarietyForm] = useState(false);
   const [newVarietyName, setNewVarietyName] = useState('');
   const [addingVariety, setAddingVariety] = useState(false);
 
-  // Cargar opciones de variedades y empleados
-  const fetchOptions = async () => {
-    setLoadingOptions(true);
-    try {
-      // Cargar variedades
-      const varietiesResponse = await axios.get<{ id: number, nombre: string }[]>('/api/variedades');
-      const mappedVarieties = varietiesResponse.data.map(v => ({
-        id: v.id,
-        name: v.nombre
-      }));
-      setAvailableVarieties(mappedVarieties);
-
-      // Cargar empleados
-      const employeesResponse = await axios.get<{ id: number, nombre: string, dni: string }[]>('/api/empleados');
-      const mappedEmployees = employeesResponse.data.map(e => ({
-        id: e.id,
-        name: e.nombre,
-        dni: e.dni
-      }));
-      setAvailableEmployees(mappedEmployees);
-    } catch (err) {
-      console.error('Error al cargar opciones:', err);
-    } finally {
-      setLoadingOptions(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchOptions();
-      setShowNewVarietyForm(false);
-      setNewVarietyName('');
-    }
-  }, [isOpen]);
-
   // Inicializar el formulario con los datos del cuartel si está editando
   useEffect(() => {
     if (quarter) {
-      // En la API, necesitamos obtener el ID del empleado cuando editamos un cuartel
-      const fetchManagerId = async () => {
-        try {
-          // Si es necesario, obtener detalles completos del cuartel para saber el ID del encargado
-          const response = await axios.get(`/api/cuarteles/${quarter.id}`);
-          const cuartelData = response.data;
-          
-          setFormData({
-            name: quarter.name,
-            varieties: [...quarter.varieties],
-            // Usar el ID del encargado del API en lugar del frontend
-            managerId: cuartelData.encargadoId || quarter.managerId,
-            managerName: quarter.managerName,
-            hectares: quarter.hectares,
-            system: quarter.system
-          });
-        } catch (err) {
-          console.error('Error al obtener detalles del cuartel:', err);
-          // Usamos los datos que ya tenemos como fallback
-          setFormData({
-            name: quarter.name,
-            varieties: [...quarter.varieties],
-            managerId: quarter.managerId,
-            managerName: quarter.managerName,
-            hectares: quarter.hectares,
-            system: quarter.system
-          });
-        }
-      };
-      
-      if (quarter.id) {
-        fetchManagerId();
-      } else {
-        setFormData({
-          name: quarter.name,
-          varieties: [...quarter.varieties],
-          managerId: quarter.managerId,
-          managerName: quarter.managerName,
-          hectares: quarter.hectares,
-          system: quarter.system
-        });
-      }
+      setFormData({
+        id: quarter.id,
+        name: quarter.name,
+        varieties: [...quarter.varieties],
+        managerId: quarter.managerId,
+        managerName: quarter.managerName,
+        hectares: quarter.hectares,
+        system: quarter.system
+      });
     } else {
       // Reiniciar el formulario para un nuevo cuartel
       setFormData({
@@ -150,6 +92,8 @@ const QuarterModal = ({ isOpen, onClose, onSave, quarter, isLoading = false }: Q
       });
     }
     setErrors({});
+    setShowNewVarietyForm(false);
+    setNewVarietyName('');
   }, [quarter, isOpen]);
 
   if (!isOpen) return null;
@@ -229,9 +173,6 @@ const QuarterModal = ({ isOpen, onClose, onSave, quarter, isLoading = false }: Q
         id: response.data.id,
         name: response.data.nombre
       };
-
-      // Agregar la nueva variedad a las opciones disponibles
-      setAvailableVarieties([...availableVarieties, newVariety]);
 
       // Agregar la nueva variedad al formulario
       setFormData({
