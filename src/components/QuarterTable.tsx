@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Map, X, PenTool as Tool, Users } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import QuarterModal from './QuarterModal';
@@ -40,6 +41,7 @@ interface Toast {
 }
 
 const QuarterTable = () => {
+  const navigate = useNavigate();
   const [quarters, setQuarters] = useState<Quarter[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedQuarter, setSelectedQuarter] = useState<Quarter | null>(null);
@@ -86,6 +88,11 @@ const QuarterTable = () => {
     fetchQuarters();
     fetchOptions();
   }, [activeFarmId]);
+
+
+  const handleQuarterClick = (quarterId: number) => {
+    navigate(`/cuarteles/${quarterId}/detalle`); // Navegar a la ruta de detalle
+  };
 
   // Cargar variedades y empleados
   const fetchOptions = async () => {
@@ -319,7 +326,7 @@ const QuarterTable = () => {
                 </tr>
               ) : (
                 quarters.map((quarter) => (
-                  <tr key={quarter.id} className="hover:bg-gray-50">
+                  <tr key={quarter.id} className="hover:bg-gray-50" onClick={() => handleQuarterClick(quarter.id)}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Map className="h-5 w-5 text-gray-400 mr-2" />
