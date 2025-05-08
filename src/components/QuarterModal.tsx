@@ -51,7 +51,7 @@ const QuarterModal = ({
 
   const handleAddVariety = (variedadId: number) => {
     // Verificar que la variedad no esté ya seleccionada
-    const existingVariety = formData.variedades.find(v => v.variedadId === variedadId);
+    const existingVariety = formData.variedades.find(v => v.id === variedadId);
     if (existingVariety) {
       setErrors({
         ...errors,
@@ -65,7 +65,7 @@ const QuarterModal = ({
       setFormData({
         ...formData,
         variedades: [...formData.variedades, { 
-          variedadId: variety.id, 
+          id: variety.id, 
           nombre: variety.name, 
           superficie: 0 
         }]
@@ -80,7 +80,7 @@ const QuarterModal = ({
   const handleRemoveVariety = (variedadId: number) => {
     setFormData({
       ...formData,
-      variedades: formData.variedades.filter(v => v.variedadId !== variedadId)
+      variedades: formData.variedades.filter(v => v.id !== variedadId)
     });
   };
 
@@ -88,7 +88,7 @@ const QuarterModal = ({
     setFormData({
       ...formData,
       variedades: formData.variedades.map(v => 
-        v.variedadId === id ? { ...v, superficie } : v
+        v.id === id ? { ...v, superficie } : v
       )
     });
   };
@@ -129,7 +129,7 @@ const QuarterModal = ({
       setFormData({
         ...formData,
         variedades: [...formData.variedades, { 
-          variedadId: newVariety.id, 
+          id: newVariety.id, 
           nombre: newVariety.name, 
           superficie: 0 
         }]
@@ -194,7 +194,7 @@ const QuarterModal = ({
 
   // Obtener variedades no utilizadas
   const getUnusedVarieties = () => {
-    const usedIds = new Set(formData.variedades.map(v => v.variedadId));
+    const usedIds = new Set(formData.variedades.map(v => v.id));
     return availableVarieties.filter(v => !usedIds.has(v.id));
   };
 
@@ -331,7 +331,7 @@ const QuarterModal = ({
                       </tr>
                     ) : (
                       formData.variedades.map((variety) => (
-                        <tr key={variety.variedadId}>
+                        <tr key={variety.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {variety.nombre}
                           </td>
@@ -339,7 +339,7 @@ const QuarterModal = ({
                             <input
                               type="number"
                               value={variety.superficie || ''}
-                              onChange={(e) => handleVarietyChange(variety.variedadId, Number(e.target.value))}
+                              onChange={(e) => handleVarietyChange(variety.id ?? -1, Number(e.target.value))}
                               placeholder="Superficie (ha)"
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                               step="0.01"
@@ -350,7 +350,7 @@ const QuarterModal = ({
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
                               type="button"
-                              onClick={() => handleRemoveVariety(variety.variedadId)}
+                              onClick={() => handleRemoveVariety(variety.id ?? -1)}
                               className="text-red-600 hover:text-red-800"
                               disabled={isLoading}
                             >

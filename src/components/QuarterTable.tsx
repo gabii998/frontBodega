@@ -101,7 +101,7 @@ const QuarterTable = () => {
         encargadoId: safeQuarter.managerId,
         fincaId: activeFarmId || 1, // Usar 1 como valor predeterminado si no está definido
         variedades: safeQuarter.variedades.map(v => ({
-          variedadId: v.variedadId,
+          variedadId: v.id,
           superficie: v.superficie
         }))
       };
@@ -285,7 +285,8 @@ const QuarterTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-3">
                         <button 
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedQuarter(quarter);
                             setIsModalOpen(true);
                           }}
@@ -295,7 +296,10 @@ const QuarterTable = () => {
                           <Edit className="h-5 w-5" />
                         </button>
                         <button 
-                          onClick={() => handleDeleteQuarter(quarter.id ?? -1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteQuarter(quarter.id ?? -1)
+                          }}
                           className="text-red-600 hover:text-red-800"
                           disabled={isLoading}
                         >
