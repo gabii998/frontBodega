@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Search, Calendar, User, ClipboardList, Droplet } from 'lucide-react';
 
 interface Employee {
   id: number;
@@ -14,74 +14,186 @@ interface Task {
   category: string;
 }
 
+interface Variedad {
+  id: number;
+  name: string;
+}
+
 interface Workday {
   id?: number;
   date: string;
-  hours: number;
+  jornales: number;
   employeeId: number;
   employeeName: string;
   taskId: number;
   taskName: string;
-  description: string;
+  variedadId?: number;
+  variedadName?: string;
 }
 
 interface WorkdayModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (workday: Workday) => void;
+  workday?: Workday | null;
   employees: Employee[];
   tasks: Task[];
+  quarterId: number;
+  quarterName: string;
+  varieties?: Variedad[];
 }
 
-const WorkdayModal = ({ isOpen, onClose, onSave, employees, tasks }: WorkdayModalProps) => {
-  const [formData, setFormData] = React.useState<Workday>({
+const WorkdayModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  workday,
+  employees, 
+  tasks,
+  quarterId,
+  quarterName,
+  varieties = []
+}: WorkdayModalProps) => {
+  const [formData, setFormData] = useState<Workday>({
     date: new Date().toISOString().split('T')[0],
-    hours: 8,
+    jornales: 1,
     employeeId: 0,
     employeeName: '',
     taskId: 0,
     taskName: '',
-    description: ''
+    variedadId: undefined,
+    variedadName: undefined
   });
 
-  const [taskSearch, setTaskSearch] = React.useState('');
+  const [taskSearch, setTaskSearch] = useState('');
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  
+  // Filtrar tareas basado en búsqueda
   const filteredTasks = tasks.filter(task => 
     task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
     task.description.toLowerCase().includes(taskSearch.toLowerCase())
   );
 
+  // Inicializar el formulario con los datos del jornal cuando se está editando
+  useEffect(() => {
+    if (workday) {
+      setFormData({
+        id: workday.id,
+        date: workday.date,
+        jornales: workday.jornales,
+        employeeId: workday.employeeId,
+        employeeName: workday.employeeName,
+        taskId: workday.taskId,
+        taskName: workday.taskName,
+        variedadId: workday.variedadId,
+        variedadName: workday.variedadName
+      });
+    } else {
+      // Valores por defecto para un nuevo jornal
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        jornales: 1,
+        employeeId: 0,
+        employeeName: '',
+        taskId: 0,
+        taskName: '',
+        variedadId: undefined,
+        variedadName: undefined
+      });
+    }
+  }, [workday]);
+
   if (!isOpen) return null;
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!formData.date) {
+      newErrors.date = 'La fecha es obligatoria';
+    }
+    
+    if (!formData.jornales || formData.jornales <= 0) {
+      newErrors.jornales = 'El número de jornales debe ser mayor a 0';
+    }
+    
+    if (!formData.employeeId) {
+      newErrors.employeeId = 'Debe seleccionar un empleado';
+    }
+    
+    if (!formData.taskId) {
+      newErrors.taskId = 'Debe seleccionar una tarea';
+    }
+    
+    // La variedad puede ser opcional dependiendo del contexto
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    
+    if (validateForm()) {
+      // Preparar los datos del empleado y tarea para mostrarlos en la tabla
+      const employee = employees.find(e => e.id === formData.employeeId);
+      const task = tasks.find(t => t.id === formData.taskId);
+      let variedad;
+      
+      if (formData.variedadId && varieties) {
+        variedad = varieties.find(v => v.id === formData.variedadId);
+      }
+      
+      const workdayToSave: Workday = {
+        ...formData,
+        employeeName: employee ? employee.name : '',
+        taskName: task ? task.name : '',
+        variedadName: variedad ? variedad.name : undefined
+      };
+      
+      onSave(workdayToSave);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
+      <div className="bg-white rounded-lg w-full max-w-lg p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          type="button"
         >
           <X className="h-6 w-6" />
         </button>
         
-        <h2 className="text-xl font-semibold mb-4">Registrar Jornal</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {workday ? 'Editar Jornal' : 'Registrar Jornal'}
+        </h2>
+        <p className="text-gray-500 mb-4">
+          Cuartel: {quarterName}
+        </p>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fecha
             </label>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Calendar className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.date ? 'border-red-500' : 'border-gray-300'
+                }`}
+                required
+              />
+            </div>
+            {errors.date && (
+              <p className="mt-1 text-sm text-red-500">{errors.date}</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -90,40 +202,110 @@ const WorkdayModal = ({ isOpen, onClose, onSave, employees, tasks }: WorkdayModa
             </label>
             <input
               type="number"
-              min="1"
-              max="24"
-              value={formData.hours}
-              onChange={(e) => setFormData({ ...formData, hours: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="0.1"
+              step="0.1"
+              value={formData.jornales}
+              onChange={(e) => setFormData({ ...formData, jornales: parseFloat(e.target.value) })}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.jornales ? 'border-red-500' : 'border-gray-300'
+              }`}
               required
             />
+            {errors.jornales && (
+              <p className="mt-1 text-sm text-red-500">{errors.jornales}</p>
+            )}
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Empleado
             </label>
-            <select
-              value={formData.employeeId}
-              onChange={(e) => {
-                const select = e.target;
-                setFormData({
-                  ...formData,
-                  employeeId: Number(select.value),
-                  employeeName: select.options[select.selectedIndex].text
-                });
-              }}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Seleccione un empleado</option>
-              {employees.map(employee => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-gray-400" />
+              </div>
+              <select
+                value={formData.employeeId || ''}
+                onChange={(e) => {
+                  const select = e.target;
+                  const value = select.value;
+                  if (value) {
+                    setFormData({
+                      ...formData,
+                      employeeId: Number(value),
+                      employeeName: select.options[select.selectedIndex].text
+                    });
+                  } else {
+                    setFormData({
+                      ...formData,
+                      employeeId: 0,
+                      employeeName: ''
+                    });
+                  }
+                }}
+                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.employeeId ? 'border-red-500' : 'border-gray-300'
+                }`}
+                required
+              >
+                <option value="">Seleccione un empleado</option>
+                {employees.map(employee => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {errors.employeeId && (
+              <p className="mt-1 text-sm text-red-500">{errors.employeeId}</p>
+            )}
           </div>
+
+          {/* Selección de variedad */}
+          {varieties && varieties.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Variedad de Uva
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Droplet className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                required
+                  value={formData.variedadId || ''}
+                  onChange={(e) => {
+                    const select = e.target;
+                    const value = select.value;
+                    if (value) {
+                      setFormData({
+                        ...formData,
+                        variedadId: Number(value),
+                        variedadName: select.options[select.selectedIndex].text
+                      });
+                    } else {
+                      setFormData({
+                        ...formData,
+                        variedadId: undefined,
+                        variedadName: undefined
+                      });
+                    }
+                  }}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Seleccione una variedad</option>
+                  {varieties.map(variedad => (
+                    <option key={variedad.id} value={variedad.id}>
+                      {variedad.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Seleccione la variedad de uva específica para este jornal.
+              </p>
+            </div>
+          )}
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -131,7 +313,7 @@ const WorkdayModal = ({ isOpen, onClose, onSave, employees, tasks }: WorkdayModa
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <ClipboardList className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
@@ -144,14 +326,13 @@ const WorkdayModal = ({ isOpen, onClose, onSave, employees, tasks }: WorkdayModa
             <div className="mt-2 max-h-40 overflow-y-auto">
               {filteredTasks.map(task => (
                 <button
-                  key={task.id}
                   type="button"
+                  key={task.id}
                   onClick={() => {
                     setFormData({
                       ...formData,
                       taskId: task.id,
-                      taskName: task.name,
-                      description: task.description
+                      taskName: task.name
                     });
                     setTaskSearch('');
                   }}
@@ -160,34 +341,39 @@ const WorkdayModal = ({ isOpen, onClose, onSave, employees, tasks }: WorkdayModa
                   }`}
                 >
                   <div className="font-medium">{task.name}</div>
-                  <div className="text-sm text-gray-500">{task.description}</div>
+                  {task.description && (
+                    <div className="text-sm text-gray-500">{task.description}</div>
+                  )}
                 </button>
               ))}
             </div>
+            {errors.taskId && (
+              <p className="mt-1 text-sm text-red-500">{errors.taskId}</p>
+            )}
           </div>
 
           {formData.taskId > 0 && (
-            <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <div className="font-medium text-gray-700">Tarea seleccionada:</div>
               <div className="text-gray-600">{formData.taskName}</div>
-              <div className="text-sm text-gray-500">{formData.description}</div>
             </div>
           )}
+      
           
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={!formData.taskId}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!formData.taskId || !formData.employeeId}
             >
-              Guardar
+              {workday ? 'Actualizar' : 'Guardar'}
             </button>
           </div>
         </form>
