@@ -269,9 +269,9 @@ const ReportsTable = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-blue-600 hover:text-blue-800">
+                    {report.esVariedad && <button className="text-blue-600 hover:text-blue-800">
                       <ChevronRight className="h-5 w-5" />
-                    </button>
+                    </button>}
                   </td>
                 </tr>
               ))
