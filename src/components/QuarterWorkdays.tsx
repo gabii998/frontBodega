@@ -144,7 +144,8 @@ const QuarterWorkdays = () => {
         jornales: workdayData.jornales,
         empleadoId: workdayData.empleadoId,
         tareaId: workdayData.tareaId,
-        variedadId: workdayData.variedadId || null
+        variedadId: workdayData.variedadId || null,
+        cuartelId: workdayData.cuartelId
       };
 
       let response: AxiosResponse<Workday>;
@@ -395,6 +396,7 @@ const QuarterWorkdays = () => {
           employees={employees}
           tasks={tasks}
           workday={selectedWorkday}
+          quarterId={quarter.id ?? 0}
           quarterName={quarter.nombre}
           varieties={quarter.variedades ?? []}
         />

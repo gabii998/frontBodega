@@ -11,5 +11,6 @@ export default interface WorkdayModalProps {
     employees: Employee[];
     tasks: Task[];
     quarterName: string;
+    quarterId:number;
     varieties?: VarietyCuartel[];
   }

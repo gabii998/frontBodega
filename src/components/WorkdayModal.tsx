@@ -11,6 +11,7 @@ const WorkdayModal = ({
   employees, 
   tasks,
   quarterName,
+  quarterId,
   varieties = []
 }: WorkdayModalProps) => {
   const [formData, setFormData] = useState<Workday>({
@@ -21,7 +22,8 @@ const WorkdayModal = ({
     tareaId: 0,
     tareaNombre: '',
     variedadId: undefined,
-    variedadNombre: undefined
+    variedadNombre: undefined,
+    cuartelId: 0
   });
 
   const [taskSearch, setTaskSearch] = useState('');
@@ -56,7 +58,8 @@ const WorkdayModal = ({
         tareaId: 0,
         tareaNombre: '',
         variedadId: undefined,
-        variedadNombre: undefined
+        variedadNombre: undefined,
+        cuartelId: 0
       });
       setTaskSearch('');
       setShowTaskList(true); // Mostrar la lista de tareas para un nuevo jornal
@@ -107,7 +110,8 @@ const WorkdayModal = ({
         ...formData,
         empleadoNombre: employee ? employee.nombre : formData.empleadoNombre,
         tareaNombre: task ? task.nombre : formData.tareaNombre,
-        variedadNombre: variedad ? variedad.name : formData.variedadNombre
+        variedadNombre: variedad ? variedad.nombre : formData.variedadNombre,
+        cuartelId: quarterId,
       };
       
       onSave(workdayToSave);
@@ -272,7 +276,7 @@ const WorkdayModal = ({
                   <option value="">Seleccione una variedad</option>
                   {varieties.map(variedad => (
                     <option key={variedad.id} value={variedad.id}>
-                      {variedad.name}
+                      {variedad.nombre}
                     </option>
                   ))}
                 </select>

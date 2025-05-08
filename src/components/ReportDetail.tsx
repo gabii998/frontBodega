@@ -7,17 +7,20 @@ import ReportDetailProps from '../model/ReportDetailProps';
 import DetalleVariedad from '../model/DetalleVariedad';
 import CategorySummary from '../model/CategorySummary';
 import TaskSummary from '../model/TaskSummary';
+import SummaryFields from '../model/SummaryFields';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [, setIsLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [generalSummary, setGeneralSummary] = useState<GeneralSummary>({
-    structure: 120,
+    jornalesTotales:report.totalWorkdays,
+    structure: 0,
     productiveTotal: report.totalWorkdays,
     nonProductiveWorkdays: Math.round(report.totalWorkdays * 0.06), // Aproximadamente 6% no productivos
     totalPaidWorkdays: Math.round(report.totalWorkdays * 1.06), // Total + no productivos
-    performance: report.performance
+    performance: report.performance,
+    quintalPorJornal: 0
   });
 
   // Estado para almacenar los datos específicos de la variedad cuando corresponda
@@ -188,13 +191,20 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   };
 
   const renderGeneralSummary = (summary: GeneralSummary) => {
-    const summaryFields: { key: keyof GeneralSummary; label: string; suffix: string }[] = [
-      { key: 'structure', label: 'Estructura', suffix: 'jornales' },
-      { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
-      { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
-      { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
-      { key: 'performance', label: 'Rendimiento', suffix: '%' }
+    const summaryFields: SummaryFields[] = [
+      { key: 'jornalesTotales', label: 'Total General', suffix: 'jornales' },
+      ...(!report.esVariedad ? [
+        { key: 'structure', label: 'Estructura', suffix: 'jornales' } as SummaryFields,
+        { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' } as SummaryFields,
+        { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' } as SummaryFields,
+        { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' } as SummaryFields
+      ] : []),
+      { key: 'performance', label: 'Rendimiento', suffix: 'qq/ha' },
+      { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
     ];
+    
+
+    
   
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">

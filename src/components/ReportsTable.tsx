@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BarChart, Calendar, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { BarChart, Calendar, ChevronRight, ChevronDown } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import ReportDetail from './ReportDetail';
 import axios from 'axios';
@@ -7,12 +7,103 @@ import Toast from './Toast';
 import ReporteVista from '../model/ReporteVista';
 import ReporteCuartel from '../model/ReporteCuartel';
 
+// Componente para las filas de variedades animadas
+const AnimatedVarietyRows = ({ 
+  varieties, 
+  isExpanded, 
+  onVarietyClick 
+}: { 
+  varieties: ReporteVista[], 
+  isExpanded: boolean,
+  onVarietyClick: (variety: ReporteVista) => void 
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | undefined>(0);
+  
+  useEffect(() => {
+    if (isExpanded) {
+      const contentHeight = containerRef.current?.scrollHeight;
+      setHeight(contentHeight);
+    } else {
+      setHeight(0);
+    }
+  }, [isExpanded, varieties.length]);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out w-full"
+      style={{ 
+        maxHeight: isExpanded ? `${height}px` : '0px',
+        opacity: isExpanded ? 1 : 0 
+      }}
+    >
+      {varieties.map((variety) => (
+        <div 
+          key={variety.id} 
+          className="bg-gray-50 hover:bg-gray-100 cursor-pointer flex w-full border-b border-gray-100 last:border-b-0"
+          onClick={() => onVarietyClick(variety)}
+        >
+          <div className="px-6 py-4 w-2/5">
+            <div className="flex items-center">
+              <div className="ml-9">
+                <div className="font-medium text-gray-700">
+                  • {variety.variedadNombre}
+                </div>
+                <div className="text-sm text-gray-500 ml-2">{variety.superficie} hectáreas</div>
+              </div>
+            </div>
+          </div>
+          <div className="px-6 py-4 w-1/5">
+            <div className="flex items-center text-gray-700">
+              <Calendar className="h-5 w-5 text-gray-400 mr-2" />
+              <span>{variety.fecha}</span>
+            </div>
+          </div>
+          <div className="px-6 py-4 text-gray-700 w-1/5">
+            <div>
+              <div className="font-medium">{variety.totalJornales.toFixed(1)} jornales</div>
+              <div className="text-sm text-gray-500">
+                {(variety.totalJornales / variety.superficie).toFixed(2)} jornales/ha
+              </div>
+            </div>
+          </div>
+          <div className="px-6 py-4 w-1/5">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              variety.rendimiento >= 85 
+                ? 'bg-green-100 text-green-800'
+                : variety.rendimiento >= 70
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {variety.rendimiento}%
+            </span>
+          </div>
+          <div className="px-6 py-4">
+            <button 
+              className="text-blue-600 hover:text-blue-800"
+              onClick={(e) => {
+                e.stopPropagation();
+                onVarietyClick(variety);
+              }}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const ReportsTable = () => {
   const [selectedReport, setSelectedReport] = useState<ReporteVista | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reports, setReports] = useState<ReporteVista[]>([]);
   const [toast, setToast] = useState<{type: 'success' | 'error' | 'info', message: string} | null>(null);
+  // Estado para rastrear qué cuarteles están expandidos
+  const [expandedQuartels, setExpandedQuartels] = useState<number[]>([]);
   
   // Configuración del selector de años
   const currentYear = new Date().getFullYear();
@@ -79,6 +170,29 @@ const ReportsTable = () => {
     fetchReports();
   }, [anioSeleccionado]);
 
+  // Función para alternar la expansión de un cuartel
+  const toggleExpansion = (cuartelId: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que se propague al tr
+    
+    if (expandedQuartels.includes(cuartelId)) {
+      // Si ya está expandido, lo colapsamos
+      setExpandedQuartels(expandedQuartels.filter(id => id !== cuartelId));
+    } else {
+      // Si no está expandido, lo expandimos
+      setExpandedQuartels([...expandedQuartels, cuartelId]);
+    }
+  };
+
+  // Verificar si un cuartel está expandido
+  const isQuartelExpanded = (cuartelId: number) => {
+    return expandedQuartels.includes(cuartelId);
+  };
+
+  // Obtener las variedades de un cuartel específico
+  const getVarieties = (cuartelId: number) => {
+    return reports.filter(report => report.esVariedad && report.cuartelId === cuartelId);
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -91,6 +205,7 @@ const ReportsTable = () => {
   }
 
   if (selectedReport) {
+    // Mostrar vista detallada solo para variedades
     // Para reportes de variedad, usamos la superficie de la variedad
     // Para reportes de cuartel completo, usamos la superficie total del cuartel
     const superficie = selectedReport.superficie;
@@ -129,6 +244,9 @@ const ReportsTable = () => {
       />
     );
   }
+
+  // Filtrar solo los cuarteles (reportes que no son variedades)
+  const cuarteles = reports.filter(report => !report.esVariedad);
 
   return (
     <div className="p-6">
@@ -182,102 +300,120 @@ const ReportsTable = () => {
       )}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <div className="overflow-x-auto">
+          <div className="min-w-full">
+            {/* Encabezados de la tabla */}
+            <div className="bg-gray-50 flex border-b border-gray-200">
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
                 Cuartel / Variedad
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </div>
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
                 Fecha
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </div>
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
                 Jornales
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </div>
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
                 Rendimiento
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </div>
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {reports.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+              </div>
+            </div>
+            
+            {/* Cuerpo de la tabla */}
+            <div className="bg-white divide-y divide-gray-200">
+              {cuarteles.length === 0 ? (
+                <div className="px-6 py-4 text-center text-gray-500">
                   No hay reportes disponibles para el año seleccionado
-                </td>
-              </tr>
-            ) : (
-              reports.map((report) => (
-                <tr 
-                  key={report.id} 
-                  className={`hover:bg-gray-50 cursor-pointer ${
-                    report.esVariedad ? 'bg-gray-50' : ''
-                  }`}
-                  onClick={() => setSelectedReport(report)}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <BarChart className="h-5 w-5 text-gray-400 mr-2" />
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {report.esVariedad ? (
-                            <div className="flex items-center">
-                              <span className="ml-4">• {report.variedadNombre}</span>
+                </div>
+              ) : (
+                // Iteramos solo por los cuarteles, no las variedades
+                cuarteles.map((cuartel) => {
+                  const varieties = getVarieties(cuartel.cuartelId);
+                  const hasVarieties = varieties.length > 0;
+                  const isExpanded = isQuartelExpanded(cuartel.cuartelId);
+                  
+                  return (
+                    <div key={cuartel.id}>
+                      {/* Fila del cuartel */}
+                      <div 
+                        className={`hover:bg-gray-50 cursor-pointer flex ${isExpanded ? 'border-b-0' : 'border-b border-gray-200'}`}
+                        onClick={(e) => toggleExpansion(cuartel.cuartelId, e)}
+                      >
+                        <div className="px-6 py-4 w-2/5">
+                          <div className="flex items-center">
+                            {hasVarieties && (
+                              <div 
+                                className={`mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
+                              >
+                                <ChevronRight className="h-5 w-5" />
+                              </div>
+                            )}
+                            <BarChart className="h-5 w-5 text-gray-400 mr-2" />
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {cuartel.cuartelNombre}
+                              </div>
+                              <div className="text-sm text-gray-500">{cuartel.superficie} hectáreas</div>
                             </div>
-                          ) : (
-                            report.cuartelNombre
+                          </div>
+                        </div>
+                        <div className="px-6 py-4 w-1/5">
+                          <div className="flex items-center">
+                            <Calendar className="h-5 w-5 text-gray-400 mr-2" />
+                            <span>{cuartel.fecha}</span>
+                          </div>
+                        </div>
+                        <div className="px-6 py-4 w-1/5">
+                          <div>
+                            <div className="font-medium text-gray-900">{cuartel.totalJornales.toFixed(1)} jornales</div>
+                            <div className="text-sm text-gray-500">{cuartel.totalHoras.toFixed(1)} horas</div>
+                          </div>
+                        </div>
+                        <div className="px-6 py-4 w-1/5">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            cuartel.rendimiento >= 85 
+                              ? 'bg-green-100 text-green-800'
+                              : cuartel.rendimiento >= 70
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {cuartel.rendimiento}%
+                          </span>
+                        </div>
+                        <div className="px-6 py-4">
+                          {hasVarieties && (
+                            <button 
+                              className="text-blue-600 hover:text-blue-800"
+                              onClick={(e) => toggleExpansion(cuartel.cuartelId, e)}
+                            >
+                              {isExpanded ? 
+                                <ChevronDown className="h-5 w-5 transition-transform duration-300 transform" /> : 
+                                <ChevronRight className="h-5 w-5 transition-transform duration-300 transform" />
+                              }
+                            </button>
                           )}
                         </div>
-                        {!report.esVariedad && (
-                          <div className="text-sm text-gray-500">{report.superficie} hectáreas</div>
-                        )}
-                        {report.esVariedad && (
-                          <div className="text-sm text-gray-500 ml-6">{report.superficie} hectáreas</div>
-                        )}
                       </div>
+                      
+                      {/* Filas de variedades con animación de expansión/colapso */}
+                      {hasVarieties && (
+                        <div className={isExpanded ? 'border-b border-gray-200' : ''}>
+                          <AnimatedVarietyRows 
+                            varieties={varieties} 
+                            isExpanded={isExpanded}
+                            onVarietyClick={setSelectedReport}
+                          />
+                        </div>
+                      )}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-                      <span>{report.fecha}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="font-medium text-gray-900">{report.totalJornales.toFixed(1)} jornales</div>
-                      <div className="text-sm text-gray-500">
-                        {report.esVariedad 
-                          ? `${(report.totalJornales / report.superficie).toFixed(2)} jornales/ha`
-                          : `${report.totalHoras.toFixed(1)} horas`
-                        }
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      report.rendimiento >= 85 
-                        ? 'bg-green-100 text-green-800'
-                        : report.rendimiento >= 70
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {report.rendimiento}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {report.esVariedad && <button className="text-blue-600 hover:text-blue-800">
-                      <ChevronRight className="h-5 w-5" />
-                    </button>}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

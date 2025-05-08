@@ -66,7 +66,7 @@ const QuarterModal = ({
         ...formData,
         variedades: [...formData.variedades, { 
           variedadId: variety.id, 
-          name: variety.name, 
+          nombre: variety.name, 
           superficie: 0 
         }]
       });
@@ -130,7 +130,7 @@ const QuarterModal = ({
         ...formData,
         variedades: [...formData.variedades, { 
           variedadId: newVariety.id, 
-          name: newVariety.name, 
+          nombre: newVariety.name, 
           superficie: 0 
         }]
       });
@@ -333,7 +333,7 @@ const QuarterModal = ({
                       formData.variedades.map((variety) => (
                         <tr key={variety.variedadId}>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {variety.name}
+                            {variety.nombre}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <input
