@@ -1,20 +1,14 @@
 import React, { useEffect } from 'react';
 import { CheckCircle, AlertCircle, X } from 'lucide-react';
+import ToastProps from '../model/ToastProps';
 
-type ToastType = 'success' | 'error' | 'info';
-
-interface ToastProps {
-  type: ToastType;
-  message: string;
-  onClose: () => void;
-  duration?: number;
-}
-
-const Toast: React.FC<ToastProps> = ({ type, message, onClose, duration = 3000 }) => {
+const Toast: React.FC<ToastProps> = ({ type, message, onClose = () => {}, duration = 3000 }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose();
-    }, duration);
+      if(onClose) {
+        onClose();
+      }
+    }, duration ?? 3000);
 
     return () => clearTimeout(timer);
   }, [onClose, duration]);
@@ -45,7 +39,11 @@ const Toast: React.FC<ToastProps> = ({ type, message, onClose, duration = 3000 }
       <div className="flex-1">
         {message}
       </div>
-      <button onClick={onClose} className="ml-4">
+      <button onClick={() => {
+        if(onClose) {
+          onClose()
+        }
+      }} className="ml-4">
         <X className="h-4 w-4" />
       </button>
     </div>

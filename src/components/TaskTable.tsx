@@ -3,24 +3,8 @@ import { Plus, Edit, Trash2, ClipboardList, X, PenTool as Tool, Users } from 'lu
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import axios from 'axios';
-
-interface Task {
-  id: number;
-  name: string;
-  type: 'Manual' | 'Mercanica';
-}
-
-// Interfaz para los datos de la API
-interface ApiTask {
-  id: number;
-  nombre: string;
-  tipo: string;
-}
-
-interface Toast {
-  type: 'success' | 'error' | 'info';
-  message: string;
-}
+import Task from '../model/Task';
+import ToastProps from '../model/ToastProps';
 
 const TaskTable = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -28,24 +12,15 @@ const TaskTable = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
-
-  // Transformar los datos de la API al formato del frontend
-  const transformApiData = (apiData: ApiTask[]): Task[] => {
-    return apiData.map(task => ({
-      id: task.id,
-      name: task.nombre,
-      type: task.tipo as 'Manual' | 'Mercanica'
-    }));
-  };
+  const [toast, setToast] = useState<ToastProps | null>(null);
 
   // Cargar tareas desde el backend
   const fetchTasks = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<ApiTask[]>('/api/tareas');
-      setTasks(transformApiData(response.data));
+      const response = await axios.get<Task[]>('/api/tareas');
+      setTasks(response.data);
     } catch (err) {
       console.error('Error al cargar tareas:', err);
       setError('No se pudieron cargar las tareas. Por favor, intente de nuevo.');
@@ -63,19 +38,19 @@ const TaskTable = () => {
     try {
       // Transformar los datos para enviar al backend
       const apiData = {
-        nombre: task.name,
-        tipo: task.type
+        nombre: task.nombre,
+        tipo: task.tipo
       };
 
       if (selectedTask) {
         // Actualizar tarea existente
-        const response = await axios.put<ApiTask>(`/api/tareas/${selectedTask.id}`, apiData);
+        const response = await axios.put<Task>(`/api/tareas/${selectedTask.id}`, apiData);
         
         // Actualizar el estado con la respuesta
         const updatedTask = {
           id: response.data.id,
-          name: response.data.nombre,
-          type: response.data.tipo as 'Manual' | 'Mercanica'
+          nombre: response.data.nombre,
+          tipo: response.data.tipo
         };
         
         setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
@@ -86,13 +61,13 @@ const TaskTable = () => {
         });
       } else {
         // Crear nueva tarea
-        const response = await axios.post<ApiTask>('/api/tareas', apiData);
+        const response = await axios.post<Task>('/api/tareas', apiData);
         
         // Añadir la nueva tarea al estado
         const newTask = {
           id: response.data.id,
-          name: response.data.nombre,
-          type: response.data.tipo as 'Manual' | 'Mercanica'
+          nombre: response.data.nombre,
+          tipo: response.data.tipo
         };
         
         setTasks([...tasks, newTask]);
@@ -142,7 +117,7 @@ const TaskTable = () => {
     }
   };
 
-  const getTypeIcon = (type: Task['type']) => {
+  const getTypeIcon = (type: Task['tipo']) => {
     return type === 'Manual' ? (
       <Users className="h-5 w-5 text-indigo-500" />
     ) : (
@@ -150,7 +125,7 @@ const TaskTable = () => {
     );
   };
 
-  const getTypeLabel = (type: Task['type']) => {
+  const getTypeLabel = (type: Task['tipo']) => {
     return type === 'Manual' ? (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
         Manual
@@ -231,13 +206,13 @@ const TaskTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <ClipboardList className="h-5 w-5 text-gray-400 mr-2" />
-                        {task.name}
+                        {task.nombre}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
-                        {getTypeIcon(task.type)}
-                        {getTypeLabel(task.type)}
+                        {getTypeIcon(task.tipo)}
+                        {getTypeLabel(task.tipo)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -295,21 +270,21 @@ interface TaskModalProps {
 
 const TaskModal = ({ isOpen, onClose, onSave, task, isLoading = false }: TaskModalProps) => {
   const [formData, setFormData] = useState<Omit<Task, 'id'>>({
-    name: '',
-    type: 'Manual'
+    nombre: '',
+    tipo: 'Manual'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (task) {
       setFormData({
-        name: task.name,
-        type: task.type
+        nombre: task.nombre,
+        tipo: task.tipo
       });
     } else {
       setFormData({
-        name: '',
-        type: 'Manual'
+        nombre: '',
+        tipo: 'Manual'
       });
     }
     setErrors({});
@@ -320,7 +295,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task, isLoading = false }: TaskMod
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.name.trim()) {
+    if (!formData.nombre.trim()) {
       newErrors.name = 'El nombre es obligatorio';
     }
     
@@ -359,8 +334,8 @@ const TaskModal = ({ isOpen, onClose, onSave, task, isLoading = false }: TaskMod
             </label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -378,9 +353,9 @@ const TaskModal = ({ isOpen, onClose, onSave, task, isLoading = false }: TaskMod
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, type: 'Manual' })}
+                onClick={() => setFormData({ ...formData, tipo: 'Manual' })}
                 className={`flex items-center justify-center p-3 rounded-lg border-2 transition-colors ${
-                  formData.type === 'Manual'
+                  formData.tipo === 'Manual'
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                     : 'border-gray-200 hover:border-indigo-200'
                 }`}
@@ -391,9 +366,9 @@ const TaskModal = ({ isOpen, onClose, onSave, task, isLoading = false }: TaskMod
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, type: 'Mercanica' })}
+                onClick={() => setFormData({ ...formData, tipo: 'Mercanica' })}
                 className={`flex items-center justify-center p-3 rounded-lg border-2 transition-colors ${
-                  formData.type === 'Mercanica'
+                  formData.tipo === 'Mercanica'
                     ? 'border-orange-500 bg-orange-50 text-orange-700'
                     : 'border-gray-200 hover:border-orange-200'
                 }`}

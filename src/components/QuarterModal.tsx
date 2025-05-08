@@ -1,47 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import axios from 'axios';
-
-// Entidad simple de variedad de uva
-interface Variety {
-  id: number;
-  name: string;
-}
-
-// Relación entre cuartel y variedad (con superficie)
-interface VarietyCuartel {
-  id?: number;
-  variedadId: number;
-  name: string;
-  superficie: number;
-}
-
-interface Employee {
-  id: number;
-  name: string;
-  dni: string;
-}
-
-interface Quarter {
-  id?: number;
-  name: string;
-  varieties: VarietyCuartel[];
-  managerId: number;
-  managerName: string;
-  hectares: number;
-  system: 'parral' | 'espaldero';
-}
-
-interface QuarterModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (quarter: Quarter) => void;
-  quarter?: Quarter;
-  isLoading?: boolean;
-  availableVarieties: Variety[];
-  availableEmployees: Employee[];
-  activeFarmId: number;
-}
+import QuarterModalProps from '../model/QuarterModalProps';
+import Quarter from '../model/Quarter';
 
 const QuarterModal = ({ 
   isOpen, 
@@ -50,19 +11,17 @@ const QuarterModal = ({
   quarter, 
   isLoading = false,
   availableVarieties,
-  availableEmployees,
-  activeFarmId
-}: QuarterModalProps) => {
+  availableEmployees}: QuarterModalProps) => {
   const [formData, setFormData] = useState<Quarter>({
-    name: '',
-    varieties: [],
+    nombre: '',
+    variedades: [],
     managerId: 0,
-    managerName: '',
-    hectares: 0,
-    system: 'parral'
+    encargadoNombre: '',
+    superficieTotal: 0,
+    sistema: 'parral'
   });
 
-  const [loadingOptions, setLoadingOptions] = useState(false);
+  const [loadingOptions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showNewVarietyForm, setShowNewVarietyForm] = useState(false);
   const [newVarietyName, setNewVarietyName] = useState('');
@@ -71,24 +30,16 @@ const QuarterModal = ({
   // Inicializar el formulario con los datos del cuartel si está editando
   useEffect(() => {
     if (quarter) {
-      setFormData({
-        id: quarter.id,
-        name: quarter.name,
-        varieties: [...quarter.varieties],
-        managerId: quarter.managerId,
-        managerName: quarter.managerName,
-        hectares: quarter.hectares,
-        system: quarter.system
-      });
+      setFormData(quarter);
     } else {
       // Reiniciar el formulario para un nuevo cuartel
       setFormData({
-        name: '',
-        varieties: [],
+        nombre: '',
+        variedades: [],
         managerId: 0,
-        managerName: '',
-        hectares: 0,
-        system: 'parral'
+        encargadoNombre: '',
+        superficieTotal: 0,
+        sistema: 'parral'
       });
     }
     setErrors({});
@@ -100,7 +51,7 @@ const QuarterModal = ({
 
   const handleAddVariety = (variedadId: number) => {
     // Verificar que la variedad no esté ya seleccionada
-    const existingVariety = formData.varieties.find(v => v.variedadId === variedadId);
+    const existingVariety = formData.variedades.find(v => v.variedadId === variedadId);
     if (existingVariety) {
       setErrors({
         ...errors,
@@ -113,7 +64,7 @@ const QuarterModal = ({
     if (variety) {
       setFormData({
         ...formData,
-        varieties: [...formData.varieties, { 
+        variedades: [...formData.variedades, { 
           variedadId: variety.id, 
           name: variety.name, 
           superficie: 0 
@@ -129,14 +80,14 @@ const QuarterModal = ({
   const handleRemoveVariety = (variedadId: number) => {
     setFormData({
       ...formData,
-      varieties: formData.varieties.filter(v => v.variedadId !== variedadId)
+      variedades: formData.variedades.filter(v => v.variedadId !== variedadId)
     });
   };
 
   const handleVarietyChange = (id: number, superficie: number) => {
     setFormData({
       ...formData,
-      varieties: formData.varieties.map(v => 
+      variedades: formData.variedades.map(v => 
         v.variedadId === id ? { ...v, superficie } : v
       )
     });
@@ -148,7 +99,7 @@ const QuarterModal = ({
     setFormData({
       ...formData,
       managerId: employeeId,
-      managerName: selectedEmployee ? selectedEmployee.name : ''
+      encargadoNombre: selectedEmployee ? selectedEmployee.nombre : ''
     });
   };
 
@@ -177,7 +128,7 @@ const QuarterModal = ({
       // Agregar la nueva variedad al formulario
       setFormData({
         ...formData,
-        varieties: [...formData.varieties, { 
+        variedades: [...formData.variedades, { 
           variedadId: newVariety.id, 
           name: newVariety.name, 
           superficie: 0 
@@ -206,7 +157,7 @@ const QuarterModal = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.name.trim()) {
+    if (!formData.nombre.trim()) {
       newErrors.name = 'El nombre es obligatorio';
     }
     
@@ -214,11 +165,11 @@ const QuarterModal = ({
       newErrors.managerId = 'Debe seleccionar un encargado';
     }
     
-    if (formData.varieties.length === 0) {
+    if (formData.variedades.length === 0) {
       newErrors.varieties = 'Debe agregar al menos una variedad';
     } else {
       // Verificar que todas las variedades tengan superficie mayor a 0
-      const invalidVariety = formData.varieties.find(v => !v.superficie || v.superficie <= 0);
+      const invalidVariety = formData.variedades.find(v => !v.superficie || v.superficie <= 0);
       if (invalidVariety) {
         newErrors.varieties = 'Todas las variedades deben tener una superficie mayor a 0';
       }
@@ -238,12 +189,12 @@ const QuarterModal = ({
 
   // Calcular la superficie total de todas las variedades
   const calculateTotalArea = () => {
-    return formData.varieties.reduce((sum, v) => sum + (v.superficie || 0), 0);
+    return formData.variedades.reduce((sum, v) => sum + (v.superficie || 0), 0);
   };
 
   // Obtener variedades no utilizadas
   const getUnusedVarieties = () => {
-    const usedIds = new Set(formData.varieties.map(v => v.variedadId));
+    const usedIds = new Set(formData.variedades.map(v => v.variedadId));
     return availableVarieties.filter(v => !usedIds.has(v.id));
   };
 
@@ -277,8 +228,8 @@ const QuarterModal = ({
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -294,8 +245,8 @@ const QuarterModal = ({
                   Sistema de Conducción
                 </label>
                 <select
-                  value={formData.system}
-                  onChange={(e) => setFormData({ ...formData, system: e.target.value as 'parral' | 'espaldero' })}
+                  value={formData.sistema ?? ""}
+                  onChange={(e) => setFormData({ ...formData, sistema: e.target.value as 'parral' | 'espaldero' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isLoading}
                 >
@@ -309,7 +260,7 @@ const QuarterModal = ({
                   Encargado
                 </label>
                 <select
-                  value={formData.managerId}
+                  value={formData.managerId ?? 0}
                   onChange={(e) => handleEmployeeChange(Number(e.target.value))}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.managerId ? 'border-red-500' : 'border-gray-300'
@@ -319,7 +270,7 @@ const QuarterModal = ({
                   <option value={0}>Seleccione un encargado</option>
                   {availableEmployees.map(employee => (
                     <option key={employee.id} value={employee.id}>
-                      {employee.name} ({employee.dni})
+                      {employee.nombre} ({employee.dni})
                     </option>
                   ))}
                 </select>
@@ -372,14 +323,14 @@ const QuarterModal = ({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {formData.varieties.length === 0 ? (
+                    {formData.variedades.length === 0 ? (
                       <tr>
                         <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
                           No hay variedades agregadas
                         </td>
                       </tr>
                     ) : (
-                      formData.varieties.map((variety) => (
+                      formData.variedades.map((variety) => (
                         <tr key={variety.variedadId}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {variety.name}

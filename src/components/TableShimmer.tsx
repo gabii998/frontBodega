@@ -1,9 +1,4 @@
-import React from 'react';
-
-interface TableShimmerProps {
-  rows?: number;
-  columns: number[];
-}
+import TableShimmerProps from '../model/TableShimmerProps';
 
 const TableShimmer = ({ rows = 5, columns }: TableShimmerProps) => {
   return (

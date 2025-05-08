@@ -1,4 +1,3 @@
-import React from 'react';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,7 +12,7 @@ const Topbar = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <span className="text-gray-700">{user?.username}</span>
+          <span className="text-gray-700">{user?.email}</span>
           <button
             onClick={logout}
             className="text-gray-600 hover:text-gray-800"

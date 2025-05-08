@@ -1,44 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Map, X, PenTool as Tool, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, Map } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import QuarterModal from './QuarterModal';
-
-// Interfaces
-interface Variety {
-  id: number;
-  name: string;
-}
-
-interface VarietyCuartel {
-  id?: number;
-  variedadId: number;
-  name: string;
-  superficie: number;
-}
-
-interface Employee {
-  id: number;
-  name: string;
-  dni: string;
-}
-
-interface Quarter {
-  id?: number;
-  name: string;
-  varieties: VarietyCuartel[];
-  managerId: number;
-  managerName: string;
-  hectares: number;
-  system: 'parral' | 'espaldero';
-}
-
-interface Toast {
-  type: 'success' | 'error' | 'info';
-  message: string;
-}
+import Quarter from '../model/Quarter';
+import Variety from '../model/Variety';
+import Employee from '../model/Employee';
+import ToastProps from '../model/ToastProps';
 
 const QuarterTable = () => {
   const navigate = useNavigate();
@@ -49,32 +19,16 @@ const QuarterTable = () => {
   const [availableVarieties, setAvailableVarieties] = useState<Variety[]>([]);
   const [availableEmployees, setAvailableEmployees] = useState<Employee[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
-  const [activeFarmId, setActiveFarmId] = useState<number>(1); // Valor predeterminado o desde contexto
+  const [toast, setToast] = useState<ToastProps | null>(null);
+  const [activeFarmId] = useState<number>(1); // Valor predeterminado o desde contexto
 
   // Función para cargar cuarteles desde la API
   const fetchQuarters = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<any[]>(`/api/cuarteles?fincaId=${activeFarmId}`);
-      
-      // Transformar datos de la API al formato del frontend
-      const transformedQuarters: Quarter[] = response.data.map(q => ({
-        id: q.id,
-        name: q.nombre,
-        system: q.sistema?.toLowerCase() as 'parral' | 'espaldero',
-        managerId: q.encargadoId,
-        managerName: q.encargadoNombre || '',
-        hectares: q.variedades?.reduce((sum, v) => sum + (v.superficie || 0), 0) || 0,
-        varieties: (q.variedades || []).map(v => ({
-          variedadId: v.variedadId,
-          name: v.variedadNombre || '',
-          superficie: v.superficie
-        }))
-      }));
-      
-      setQuarters(transformedQuarters);
+      const response = await axios.get<Quarter[]>(`/api/cuarteles?fincaId=${activeFarmId}`);
+      setQuarters(response.data);
     } catch (err) {
       console.error('Error al cargar cuarteles:', err);
       setError('No se pudieron cargar los cuarteles. Por favor, intente de nuevo.');
@@ -111,7 +65,7 @@ const QuarterTable = () => {
       const employeesResponse = await axios.get<{ id: number, nombre: string, dni: string }[]>('/api/empleados');
       const mappedEmployees = employeesResponse.data.map(e => ({
         id: e.id,
-        name: e.nombre,
+        nombre: e.nombre,
         dni: e.dni
       }));
       setAvailableEmployees(mappedEmployees);
@@ -133,20 +87,20 @@ const QuarterTable = () => {
       // Asegurarse de que todos los campos tengan valores predeterminados
       const safeQuarter = {
         ...quarter,
-        name: quarter.name || '',
-        system: quarter.system || 'parral',
+        nombre: quarter.nombre || '',
+        sistema: quarter.sistema || 'parral',
         managerId: quarter.managerId || 0,
-        varieties: quarter.varieties || []
+        variedades: quarter.variedades || []
       };
       
       // Transformar el quarter del formato del frontend al formato de la API
       const apiQuarterData = {
         id: safeQuarter.id,
-        nombre: safeQuarter.name,
-        sistema: safeQuarter.system.charAt(0).toUpperCase() + safeQuarter.system.slice(1),
+        nombre: safeQuarter.nombre,
+        sistema: safeQuarter.sistema.charAt(0).toUpperCase() + safeQuarter.sistema.slice(1),
         encargadoId: safeQuarter.managerId,
         fincaId: activeFarmId || 1, // Usar 1 como valor predeterminado si no está definido
-        variedades: safeQuarter.varieties.map(v => ({
+        variedades: safeQuarter.variedades.map(v => ({
           variedadId: v.variedadId,
           superficie: v.superficie
         }))
@@ -164,19 +118,7 @@ const QuarterTable = () => {
       }
       
       // Transformar la respuesta del formato API al formato frontend
-      const savedQuarter: Quarter = {
-        id: response.data.id,
-        name: response.data.nombre,
-        system: response.data.sistema?.toLowerCase() as 'parral' | 'espaldero' || 'parral',
-        managerId: response.data.encargadoId,
-        managerName: response.data.encargadoNombre || getManagerName(response.data.encargadoId),
-        hectares: calculateHectares(response.data.variedades),
-        varieties: (response.data.variedades || []).map(v => ({
-          variedadId: v.variedadId,
-          name: v.variedadNombre || getVarietyName(v.variedadId),
-          superficie: v.superficie
-        }))
-      };
+      const savedQuarter: Quarter = response.data;
       
       // Actualizar la lista de cuarteles
       if (quarter.id) {
@@ -196,13 +138,24 @@ const QuarterTable = () => {
       });
       
     } catch (err) {
-      console.error('Error al guardar cuartel:', err);
-      
-      // Mostrar notificación de error
+      if(axios.isAxiosError(err)) {
+        // Mostrar notificación de error
       setToast({
         type: 'error',
         message: `Error al ${quarter.id ? 'actualizar' : 'crear'} el cuartel: ${err.response?.data?.message || err.message}`
       });
+      } else if (err instanceof Error) {
+        setToast({
+          type: 'error',
+          message: err.message
+        });
+      } else {
+        setToast({
+          type: 'error',
+          message: `Ha ocurrido un error`
+        });
+      }
+      
     } finally {
       setIsLoading(false);
     }
@@ -234,22 +187,7 @@ const QuarterTable = () => {
     }
   };
 
-  // Funciones auxiliares
-  const calculateHectares = (variedades) => {
-    return variedades?.reduce((sum, v) => sum + (v.superficie || 0), 0) || 0;
-  };
-
-  const getVarietyName = (variedadId) => {
-    const variety = availableVarieties.find(v => v.id === variedadId);
-    return variety ? variety.name : `Variedad ${variedadId}`;
-  };
-
-  const getManagerName = (managerId) => {
-    const manager = availableEmployees.find(e => e.id === managerId);
-    return manager ? manager.name : `Encargado ${managerId}`;
-  };
-
-  const getSystemIcon = (system: Quarter['system']) => {
+  const getSystemIcon = (system: Quarter['sistema']) => {
     if (system === 'parral') {
       return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Parral</span>;
     } else {
@@ -332,17 +270,17 @@ const QuarterTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Map className="h-5 w-5 text-gray-400 mr-2" />
-                        {quarter.name}
+                        {quarter.nombre}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getSystemIcon(quarter.system)}
+                      {getSystemIcon(quarter.sistema)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {quarter.managerName}
+                      {quarter.encargadoNombre}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {quarter.hectares} ha
+                      {quarter.superficieTotal} ha
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-3">
@@ -357,7 +295,7 @@ const QuarterTable = () => {
                           <Edit className="h-5 w-5" />
                         </button>
                         <button 
-                          onClick={() => handleDeleteQuarter(quarter.id)}
+                          onClick={() => handleDeleteQuarter(quarter.id ?? -1)}
                           className="text-red-600 hover:text-red-800"
                           disabled={isLoading}
                         >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, PenTool as Tool, ArrowLeft, BarChart, Edit } from 'lucide-react';
 import SummaryModal from './SummaryModal';
 import axios from 'axios';
@@ -10,8 +10,8 @@ import TaskSummary from '../model/TaskSummary';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setIsLoading] = useState(false);
+  const [, setError] = useState<string | null>(null);
   const [generalSummary, setGeneralSummary] = useState<GeneralSummary>({
     structure: 120,
     productiveTotal: report.totalWorkdays,
@@ -88,7 +88,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     }
 
     // Si es un reporte general o no tenemos datos específicos, usar los datos aproximados
-    const superficie = report.quarter.hectares || 1;
+    const superficie = report.quarter.superficieTotal || 1;
     
     return {
       manual: {
@@ -187,9 +187,46 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     );
   };
 
-  // El resto del componente permanece igual
-  // ...
+  const renderGeneralSummary = (summary: GeneralSummary) => {
+    const summaryFields: { key: keyof GeneralSummary; label: string; suffix: string }[] = [
+      { key: 'structure', label: 'Estructura', suffix: 'jornales' },
+      { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
+      { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
+      { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
+      { key: 'performance', label: 'Rendimiento', suffix: '%' }
+    ];
+  
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-blue-50">
+          <div className="flex items-center gap-2">
+            <BarChart className="h-5 w-5 text-blue-500" />
+            <h3 className="text-lg font-semibold text-gray-900">Indicadores</h3>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="divide-y divide-gray-200">
+          {summaryFields.map(({ key, label, suffix }) => (
+            <div key={key} className="p-4">
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-gray-900">{label}</span>
+                <span className="text-gray-900">
+                  {summary[key]} {suffix}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
+  
   return (
     <div className="p-6">
       <div className="flex items-center space-x-4 mb-6">
@@ -201,7 +238,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         </button>
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">
-            {report.quarter.name}
+            {report.quarter.nombre}
             {report.esVariedad && report.variedadNombre && (
               <span className="text-lg font-normal ml-2">
                 - {report.variedadNombre}
@@ -222,7 +259,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
               <p className="text-2xl font-semibold text-gray-900">
                 {report.esVariedad && detalleVariedad
                   ? detalleVariedad.superficie
-                  : report.quarter.hectares}
+                  : report.quarter.superficieTotal}
               </p>
             </div>
             <div>
@@ -251,11 +288,6 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
       />
     </div>
   );
-};
-
-// Función renderGeneralSummary
-const renderGeneralSummary = (summary: GeneralSummary) => {
-  // Implementación existente...
 };
 
 export default ReportDetail;

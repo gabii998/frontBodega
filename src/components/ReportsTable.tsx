@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Calendar, ChevronRight } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import ReportDetail from './ReportDetail';
@@ -110,8 +110,9 @@ const ReportsTable = () => {
           id: selectedReport.id,
           quarter: {
             id: selectedReport.cuartelId,
-            name: selectedReport.cuartelNombre,
-            hectares: superficie
+            nombre: selectedReport.cuartelNombre,
+            superficieTotal: superficie,
+            variedades: []
           },
           date: selectedReport.fecha,
           totalHours: selectedReport.totalHoras,

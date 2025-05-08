@@ -1,77 +1,20 @@
 // src/components/QuarterWorkdays.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Clock, UserCheck, Edit, Trash2 } from 'lucide-react';
 import WorkdayModal from './WorkdayModal';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import Toast from './Toast';
+import Workday from '../model/Workday';
+import Quarter from '../model/Quarter';
+import Employee from '../model/Employee';
+import Task from '../model/Task';
 
-interface Employee {
-  id: number;
-  name: string;
-  dni: string;
-}
 
-interface Task {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-}
-
-interface Variedad {
-  id: number;
-  name: string;
-}
-
-interface Workday {
-  id?: number;
-  date: string;
-  jornales: number;
-  employeeId: number;
-  employeeName: string;
-  taskId: number;
-  taskName: string;
-  variedadId?: number;
-  variedadName?: string;
-}
-
-interface Quarter {
-  id: number;
-  name: string;
-  superficie?: number;
-  variedades?: Variedad[];
-}
-
-const mapApiWorkday = (apiWorkday: any): Workday => {
-  // Imprimir la fecha exacta que viene del backend para depuración
-  console.log('Fecha original del backend:', apiWorkday.fecha);
-
-  // Obtener solo la parte de la fecha (YYYY-MM-DD) sin manipular la zona horaria
-  let fechaFormateada = apiWorkday.fecha ? apiWorkday.fecha.split('T')[0] : '';
-  console.log('Fecha formateada para el frontend:', fechaFormateada);
-
-  // Construir el objeto workday
-  const workday: Workday = {
-    id: apiWorkday.id,
-    date: fechaFormateada,
-    jornales: apiWorkday.jornales || 0,
-    employeeId: apiWorkday.empleadoId || 0,
-    employeeName: apiWorkday.empleadoNombre || '',
-    taskId: apiWorkday.tareaId || 0,
-    taskName: apiWorkday.tareaNombre || ''
-  };
-
-  // Añadir campos opcionales
-  if (apiWorkday.variedadId) {
-    workday.variedadId = apiWorkday.variedadId;
-  }
-
-  if (apiWorkday.variedadNombre) {
-    workday.variedadName = apiWorkday.variedadNombre;
-  }
-
-  return workday;
+const mapApiWorkday = (apiWorkday: Workday): Workday => {
+  const fechaFormateada = apiWorkday.fecha ? apiWorkday.fecha.split('T')[0] : '';
+  apiWorkday.fecha = fechaFormateada;
+  return apiWorkday;
 };
 
 const QuarterWorkdays = () => {
@@ -85,7 +28,6 @@ const QuarterWorkdays = () => {
   const [quarter, setQuarter] = useState<Quarter | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [varieties, setVarieties] = useState<Variedad[]>([]);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
 
   // Cargar datos del cuartel
@@ -94,26 +36,8 @@ const QuarterWorkdays = () => {
       try {
         setIsLoading(true);
         const response = await axios.get(`/api/cuarteles/${id}`);
-
-        // Transformar respuesta de la API al formato local
-        const quarterData: Quarter = {
-          id: response.data.id,
-          name: response.data.nombre,
-          superficie: response.data.superficieTotal,
-          variedades: (response.data.variedades || []).map((v: any) => ({
-            id: v.id,
-            name: v.nombre
-          }))
-        };
-
-        setQuarter(quarterData);
+        setQuarter(response.data);
         // También guardamos las variedades para usarlas después
-        if (response.data.variedades) {
-          setVarieties(response.data.variedades.map((v: any) => ({
-            id: v.id,
-            name: v.nombre
-          })));
-        }
       } catch (err) {
         console.error('Error al cargar el cuartel:', err);
         setError('No se pudo cargar la información del cuartel');
@@ -124,11 +48,7 @@ const QuarterWorkdays = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get('/api/empleados');
-        setEmployees(response.data.map((e: any) => ({
-          id: e.id,
-          name: e.nombre,
-          dni: e.dni
-        })));
+        setEmployees(response.data);
       } catch (err) {
         console.error('Error al cargar empleados:', err);
       }
@@ -138,12 +58,7 @@ const QuarterWorkdays = () => {
     const fetchTasks = async () => {
       try {
         const response = await axios.get('/api/tareas');
-        setTasks(response.data.map((t: any) => ({
-          id: t.id,
-          name: t.nombre,
-          description: '',
-          category: t.tipo
-        })));
+        setTasks(response.data);
       } catch (err) {
         console.error('Error al cargar tareas:', err);
       }
@@ -217,7 +132,7 @@ const QuarterWorkdays = () => {
   const handleSaveWorkday = async (workdayData: Workday) => {
     try {
       // Asegurarse de que la fecha se maneja correctamente (sin ajustes de zona horaria)
-      const [year, month, day] = workdayData.date.split('-').map(Number);
+      const [year, month, day] = workdayData.fecha.split('-').map(Number);
       // Crear fecha UTC a las 12:00 para evitar problemas de cambio de día
       const fechaUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
       const fechaISO = fechaUTC.toISOString();
@@ -227,17 +142,15 @@ const QuarterWorkdays = () => {
         id: workdayData.id,
         fecha: fechaISO,
         jornales: workdayData.jornales,
-        empleadoId: workdayData.employeeId,
-        tareaId: workdayData.taskId,
+        empleadoId: workdayData.empleadoId,
+        tareaId: workdayData.tareaId,
         variedadId: workdayData.variedadId || null
       };
 
-      console.log('Enviando fecha al servidor:', workdayData.date, '->', fechaISO);
-
-      let response;
+      let response: AxiosResponse<Workday>;
 
       if (workdayData.id) {
-        response = await axios.put(`/api/jornales/${workdayData.id}`, apiData);
+        response = await axios.put<Workday>(`/api/jornales/${workdayData.id}`, apiData);
 
         setWorkdays(workdays.map(w =>
           w.id === workdayData.id ? mapApiWorkday(response.data) : w
@@ -261,17 +174,30 @@ const QuarterWorkdays = () => {
       setIsModalOpen(false);
       setSelectedWorkday(null);
     } catch (err) {
-      console.error('Error al guardar el jornal:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error al guardar el jornal:', err);
+        let errorMessage = 'Error al guardar el jornal';
+        if (err.response && err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
 
-      let errorMessage = 'Error al guardar el jornal';
-      if (err.response && err.response.data && err.response.data.message) {
-        errorMessage = err.response.data.message;
+        setToast({
+          type: 'error',
+          message: errorMessage
+        });
+      } else if(err instanceof Error) {
+        setToast({
+          type: 'error',
+          message: err.message
+        });
+      } else {
+        setToast({
+          type: 'error',
+          message: JSON.stringify(err)
+        });
+      
       }
 
-      setToast({
-        type: 'error',
-        message: errorMessage
-      });
     }
   };
 
@@ -338,11 +264,11 @@ const QuarterWorkdays = () => {
           </button>
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">
-              Jornales - {quarter.name}
+              Jornales - {quarter.nombre}
             </h2>
-            {quarter.superficie && (
+            {quarter.superficieTotal && (
               <p className="text-sm text-gray-500">
-                Superficie: {quarter.superficie} hectáreas
+                Superficie: {quarter.superficieTotal} hectáreas
               </p>
             )}
           </div>
@@ -393,9 +319,9 @@ const QuarterWorkdays = () => {
                     {(() => {
                       // Mostrar solo la fecha, evitando cualquier conversión de zona horaria
                       // Dividir por 'T' para obtener solo la parte de fecha si es una fecha ISO
-                      const fechaParte = workday.date.includes('T')
-                        ? workday.date.split('T')[0]
-                        : workday.date;
+                      const fechaParte = workday.fecha.includes('T')
+                        ? workday.fecha.split('T')[0]
+                        : workday.fecha;
 
                       // Dividir la fecha en componentes
                       const [anio, mes, dia] = fechaParte.split('-');
@@ -407,15 +333,15 @@ const QuarterWorkdays = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <UserCheck className="h-5 w-5 text-gray-400 mr-2" />
-                      {workday.employeeName}
+                      {workday.empleadoNombre}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {workday.taskName}
+                    {workday.tareaNombre}
                   </td>
                   {quarter.variedades && quarter.variedades.length > 0 && (
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {workday.variedadName || '-'}
+                      {workday.variedadNombre || '-'}
                     </td>
                   )}
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -469,9 +395,8 @@ const QuarterWorkdays = () => {
           employees={employees}
           tasks={tasks}
           workday={selectedWorkday}
-          quarterId={quarter.id}
-          quarterName={quarter.name}
-          varieties={quarter.variedades}
+          quarterName={quarter.nombre}
+          varieties={quarter.variedades ?? []}
         />
       )}
     </div>

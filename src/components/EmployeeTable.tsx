@@ -3,21 +3,11 @@ import { Edit, Trash2, UserPlus } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import axios from 'axios';
 import EmployeeModal from './EmployeeModal';
+import Employee from '../model/Employee';
+import ApiEmployee from '../model/ApiEmployee';
+import ToastProps from '../model/ToastProps';
 import Toast from './Toast';
 
-// Interfaces
-interface Employee {
-  id?: number;
-  name: string;
-  dni: string;
-}
-
-// Interface para la respuesta de la API
-interface ApiEmployee {
-  id: number;
-  nombre: string;
-  dni: string;
-}
 
 const EmployeeTable = () => {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
@@ -25,16 +15,8 @@ const EmployeeTable = () => {
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | undefined>();
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [toast, setToast] = React.useState<Toast | null>(null);
+  const [toast, setToast] = React.useState<ToastProps | null>(null);
 
-  // Función para transformar la respuesta de la API al formato del frontend
-  const transformApiData = (data: ApiEmployee[]): Employee[] => {
-    return data.map(emp => ({
-      id: emp.id,
-      name: emp.nombre, // Convertir de 'nombre' a 'name'
-      dni: emp.dni
-    }));
-  };
 
   // Cargar empleados desde el backend
   const fetchEmployees = async () => {
@@ -42,7 +24,7 @@ const EmployeeTable = () => {
     setError(null);
     try {
       const response = await axios.get<ApiEmployee[]>('/api/empleados');
-      setEmployees(transformApiData(response.data));
+      setEmployees(response.data);
     } catch (err) {
       console.error('Error al cargar empleados:', err);
       setError('No se pudieron cargar los empleados. Por favor, intente de nuevo.');
@@ -66,14 +48,14 @@ const EmployeeTable = () => {
       if (selectedEmployee?.id) {
         // Actualizar empleado existente
         const response = await axios.put<ApiEmployee>(`/api/empleados/${selectedEmployee.id}`, {
-          nombre: employeeData.name,
+          nombre: employeeData.nombre,
           dni: employeeData.dni
         });
         
         // Transformar la respuesta y actualizar el estado
         const updatedEmployee = {
           id: response.data.id,
-          name: response.data.nombre,
+          nombre: response.data.nombre,
           dni: response.data.dni
         };
         
@@ -89,14 +71,14 @@ const EmployeeTable = () => {
       } else {
         // Crear nuevo empleado
         const response = await axios.post<ApiEmployee>('/api/empleados', {
-          nombre: employeeData.name,
+          nombre: employeeData.nombre,
           dni: employeeData.dni
         });
         
         // Transformar la respuesta y actualizar el estado
         const newEmployee = {
           id: response.data.id,
-          name: response.data.nombre,
+          nombre: response.data.nombre,
           dni: response.data.dni
         };
         
@@ -207,7 +189,7 @@ const EmployeeTable = () => {
               ) : (
                 employees.map((employee) => (
                   <tr key={employee.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{employee.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{employee.nombre}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{employee.dni}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-3">

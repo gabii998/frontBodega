@@ -1,20 +1,8 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import GeneralSummary from '../model/GeneralSummary';
+import SummaryModalProps from '../model/SummaryModalProps';
 
-interface GeneralSummary {
-  structure: number;
-  productiveTotal: number;
-  nonProductiveWorkdays: number;
-  totalPaidWorkdays: number;
-  performance: number;
-}
-
-interface SummaryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (summary: GeneralSummary) => void;
-  summary: GeneralSummary;
-}
 
 const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) => {
   const [formData, setFormData] = React.useState<GeneralSummary>(summary);

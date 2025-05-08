@@ -1,47 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
-
-interface Employee {
-  id: number;
-  name: string;
-  dni: string;
-}
-
-interface Task {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-}
-
-interface Variedad {
-  id: number;
-  name: string;
-}
-
-interface Workday {
-  id?: number;
-  date: string;
-  jornales: number;
-  employeeId: number;
-  employeeName: string;
-  taskId: number;
-  taskName: string;
-  variedadId?: number;
-  variedadName?: string;
-}
-
-interface WorkdayModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (workday: Workday) => void;
-  workday?: Workday | null;
-  employees: Employee[];
-  tasks: Task[];
-  quarterId: number;
-  quarterName: string;
-  varieties?: Variedad[];
-}
+import { X, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
+import Workday from '../model/Workday';
+import WorkdayModalProps from '../model/WorkdayModalProps';
 
 const WorkdayModal = ({ 
   isOpen, 
@@ -50,19 +10,18 @@ const WorkdayModal = ({
   workday,
   employees, 
   tasks,
-  quarterId,
   quarterName,
   varieties = []
 }: WorkdayModalProps) => {
   const [formData, setFormData] = useState<Workday>({
-    date: new Date().toISOString().split('T')[0],
+    fecha: new Date().toISOString().split('T')[0],
     jornales: 1,
-    employeeId: 0,
-    employeeName: '',
-    taskId: 0,
-    taskName: '',
+    empleadoId: 0,
+    empleadoNombre: '',
+    tareaId: 0,
+    tareaNombre: '',
     variedadId: undefined,
-    variedadName: undefined
+    variedadNombre: undefined
   });
 
   const [taskSearch, setTaskSearch] = useState('');
@@ -71,30 +30,18 @@ const WorkdayModal = ({
   
   // Filtrar tareas basado en búsqueda
   const filteredTasks = tasks.filter(task => 
-    task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-    (task.description && task.description.toLowerCase().includes(taskSearch.toLowerCase()))
+    task.nombre.toLowerCase().includes(taskSearch.toLowerCase()) ||
+    (task.nombre && task.nombre.toLowerCase().includes(taskSearch.toLowerCase()))
   );
 
   // Inicializar el formulario con los datos del jornal cuando se está editando
   useEffect(() => {
     if (workday) {
-      console.log("Cargando datos de workday:", workday);
-      setFormData({
-        id: workday.id,
-        date: workday.date,
-        jornales: workday.jornales,
-        employeeId: workday.employeeId,
-        employeeName: workday.employeeName,
-        taskId: workday.taskId,
-        taskName: workday.taskName,
-        variedadId: workday.variedadId,
-        variedadName: workday.variedadName
-      });
-      
+      setFormData(workday);
       // Actualizar el campo de búsqueda de tareas cuando se edita
-      const selectedTask = tasks.find(t => t.id === workday.taskId);
+      const selectedTask = tasks.find(t => t.id === workday.tareaId);
       if (selectedTask) {
-        setTaskSearch(selectedTask.name);
+        setTaskSearch(selectedTask.nombre);
       }
       
       // No mostrar la lista de tareas al editar inicialmente
@@ -102,14 +49,14 @@ const WorkdayModal = ({
     } else {
       // Valores por defecto para un nuevo jornal
       setFormData({
-        date: new Date().toISOString().split('T')[0],
+        fecha: new Date().toISOString().split('T')[0],
         jornales: 1,
-        employeeId: 0,
-        employeeName: '',
-        taskId: 0,
-        taskName: '',
+        empleadoId: 0,
+        empleadoNombre: '',
+        tareaId: 0,
+        tareaNombre: '',
         variedadId: undefined,
-        variedadName: undefined
+        variedadNombre: undefined
       });
       setTaskSearch('');
       setShowTaskList(true); // Mostrar la lista de tareas para un nuevo jornal
@@ -121,7 +68,7 @@ const WorkdayModal = ({
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
     
-    if (!formData.date) {
+    if (!formData.fecha) {
       newErrors.date = 'La fecha es obligatoria';
     }
     
@@ -129,11 +76,11 @@ const WorkdayModal = ({
       newErrors.jornales = 'El número de jornales debe ser mayor a 0';
     }
     
-    if (!formData.employeeId) {
+    if (!formData.empleadoId) {
       newErrors.employeeId = 'Debe seleccionar un empleado';
     }
     
-    if (!formData.taskId) {
+    if (!formData.tareaId) {
       newErrors.taskId = 'Debe seleccionar una tarea';
     }
     
@@ -148,8 +95,8 @@ const WorkdayModal = ({
     
     if (validateForm()) {
       // Preparar los datos del empleado y tarea para mostrarlos en la tabla
-      const employee = employees.find(e => e.id === formData.employeeId);
-      const task = tasks.find(t => t.id === formData.taskId);
+      const employee = employees.find(e => e.id === formData.empleadoId);
+      const task = tasks.find(t => t.id === formData.tareaId);
       let variedad;
       
       if (formData.variedadId && varieties) {
@@ -158,9 +105,9 @@ const WorkdayModal = ({
       
       const workdayToSave: Workday = {
         ...formData,
-        employeeName: employee ? employee.name : formData.employeeName,
-        taskName: task ? task.name : formData.taskName,
-        variedadName: variedad ? variedad.name : formData.variedadName
+        empleadoNombre: employee ? employee.nombre : formData.empleadoNombre,
+        tareaNombre: task ? task.nombre : formData.tareaNombre,
+        variedadNombre: variedad ? variedad.name : formData.variedadNombre
       };
       
       onSave(workdayToSave);
@@ -171,8 +118,8 @@ const WorkdayModal = ({
   const handleClearTask = () => {
     setFormData({
       ...formData,
-      taskId: 0,
-      taskName: ''
+      tareaId: 0,
+      tareaNombre: ''
     });
     setTaskSearch('');
     setShowTaskList(true);
@@ -212,8 +159,8 @@ const WorkdayModal = ({
               </div>
               <input
                 type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                value={formData.fecha}
+                onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.date ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -254,21 +201,21 @@ const WorkdayModal = ({
                 <User className="h-5 w-5 text-gray-400" />
               </div>
               <select
-                value={formData.employeeId || ''}
+                value={formData.empleadoId || ''}
                 onChange={(e) => {
                   const select = e.target;
                   const value = select.value;
                   if (value) {
                     setFormData({
                       ...formData,
-                      employeeId: Number(value),
-                      employeeName: select.options[select.selectedIndex].text
+                      empleadoId: Number(value),
+                      empleadoNombre: select.options[select.selectedIndex].text
                     });
                   } else {
                     setFormData({
                       ...formData,
-                      employeeId: 0,
-                      employeeName: ''
+                      empleadoId: 0,
+                      empleadoNombre: ''
                     });
                   }
                 }}
@@ -280,7 +227,7 @@ const WorkdayModal = ({
                 <option value="">Seleccione un empleado</option>
                 {employees.map(employee => (
                   <option key={employee.id} value={employee.id}>
-                    {employee.name}
+                    {employee.nombre}
                   </option>
                 ))}
               </select>
@@ -310,13 +257,13 @@ const WorkdayModal = ({
                       setFormData({
                         ...formData,
                         variedadId: Number(value),
-                        variedadName: select.options[select.selectedIndex].text
+                        variedadNombre: select.options[select.selectedIndex].text
                       });
                     } else {
                       setFormData({
                         ...formData,
                         variedadId: undefined,
-                        variedadName: undefined
+                        variedadNombre: undefined
                       });
                     }
                   }}
@@ -342,12 +289,12 @@ const WorkdayModal = ({
             </label>
             
             {/* Si hay una tarea seleccionada, mostrar la información con opción para eliminarla */}
-            {formData.taskId > 0 ? (
+            {formData.tareaId > 0 ? (
               <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="font-medium text-gray-700">Tarea seleccionada:</div>
-                    <div className="text-gray-600">{formData.taskName}</div>
+                    <div className="text-gray-600">{formData.tareaNombre}</div>
                   </div>
                   <button 
                     type="button"
@@ -385,17 +332,17 @@ const WorkdayModal = ({
                           onClick={() => {
                             setFormData({
                               ...formData,
-                              taskId: task.id,
-                              taskName: task.name
+                              tareaId: task.id,
+                              tareaNombre: task.nombre
                             });
-                            setTaskSearch(task.name);
+                            setTaskSearch(task.nombre);
                             setShowTaskList(false);
                           }}
                           className="w-full text-left px-3 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                         >
-                          <div className="font-medium">{task.name}</div>
-                          {task.description && (
-                            <div className="text-sm text-gray-500">{task.description}</div>
+                          <div className="font-medium">{task.nombre}</div>
+                          {task.nombre && (
+                            <div className="text-sm text-gray-500">{task.nombre}</div>
                           )}
                         </button>
                       ))
@@ -425,7 +372,7 @@ const WorkdayModal = ({
             <button
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!formData.taskId || !formData.employeeId}
+              disabled={!formData.tareaId || !formData.empleadoId}
             >
               {workday ? 'Actualizar' : 'Guardar'}
             </button>
