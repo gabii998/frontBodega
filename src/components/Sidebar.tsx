@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, Home, Settings, FileText, MapPin, ClipboardList, LogOut } from 'lucide-react';
+import { Users, Home, Settings, FileText, MapPin, ClipboardList, LogOut, Leaf, Grape } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -53,6 +53,16 @@ const Sidebar = () => {
           >
             <ClipboardList className="h-5 w-5 mr-3" />
             <span>Tareas</span>
+          </NavLink>
+
+          <NavLink 
+            to="/varieties"
+            className={({ isActive }) => `flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors w-full text-left ${
+              isActive ? 'bg-gray-700' : ''
+            }`}
+          >
+            <Grape className="h-5 w-5 mr-3" />
+            <span>Variedades de Uva</span>
           </NavLink>
           
           <NavLink 

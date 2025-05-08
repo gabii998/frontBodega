@@ -9,6 +9,7 @@ import QuarterTable from './components/QuarterTable';
 import TaskTable from './components/TaskTable';
 import ReportsTable from './components/ReportsTable';
 import QuarterWorkdays from './components/QuarterWorkdays';
+import VarietyTable from './components/VarietyTable';
 
 // Componente de carga
 const LoadingScreen = () => (
@@ -108,6 +109,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <TaskTable />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+    <Route path="/varieties" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <VarietyTable />
           </MainLayout>
         </ProtectedRoute>
       } />
