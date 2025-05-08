@@ -90,8 +90,10 @@ const QuarterTable = () => {
   }, [activeFarmId]);
 
 
-  const handleQuarterClick = (quarterId: number) => {
-    navigate(`/cuarteles/${quarterId}/detalle`); // Navegar a la ruta de detalle
+  const handleQuarterClick = (quarterId: number | undefined) => {
+    if (quarterId) {
+      navigate(`/quarters/${quarterId}/workdays`);
+    }
   };
 
   // Cargar variedades y empleados
@@ -326,7 +328,7 @@ const QuarterTable = () => {
                 </tr>
               ) : (
                 quarters.map((quarter) => (
-                  <tr key={quarter.id} className="hover:bg-gray-50" onClick={() => handleQuarterClick(quarter.id)}>
+                  <tr key={quarter.id} className="hover:bg-gray-50" onClick={() => handleQuarterClick(quarter.id ?? -1)}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Map className="h-5 w-5 text-gray-400 mr-2" />
