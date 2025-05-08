@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, Home, Settings, FileText, MapPin, ClipboardList, LogOut, Leaf, Grape } from 'lucide-react';
+import { Users, Home, Settings, FileText, MapPin, ClipboardList, LogOut, Grape } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {

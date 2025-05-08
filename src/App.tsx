@@ -10,6 +10,7 @@ import TaskTable from './components/TaskTable';
 import ReportsTable from './components/ReportsTable';
 import QuarterWorkdays from './components/QuarterWorkdays';
 import VarietyTable from './components/VarietyTable';
+import { FarmProvider } from './context/FarmContext';
 
 // Componente de carga
 const LoadingScreen = () => (
@@ -138,7 +139,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <FarmProvider>
+          <AppRoutes />
+        </FarmProvider>
       </AuthProvider>
     </BrowserRouter>
   );

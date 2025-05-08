@@ -52,6 +52,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     if (report.esVariedad && report.variedadId) {
       fetchDetalleVariedad();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report]);
 
   // Configuramos los datos de las tareas según si es un reporte general o de variedad

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, MapPin } from 'lucide-react';
 import axios from 'axios';
 import QuarterModalProps from '../model/QuarterModalProps';
 import Quarter from '../model/Quarter';
+import { useFarm } from '../context/FarmContext';
 
 const QuarterModal = ({ 
   isOpen, 
@@ -12,6 +13,7 @@ const QuarterModal = ({
   isLoading = false,
   availableVarieties,
   availableEmployees}: QuarterModalProps) => {
+  const { activeFarm } = useFarm();
   const [formData, setFormData] = useState<Quarter>({
     nombre: '',
     variedades: [],
@@ -213,6 +215,14 @@ const QuarterModal = ({
         <h2 className="text-xl font-semibold mb-4">
           {quarter ? 'Editar Cuartel' : 'Nuevo Cuartel'}
         </h2>
+
+        {/* Mostrar la finca activa */}
+        {activeFarm && (
+          <div className="flex items-center mb-4 bg-green-50 p-3 rounded-lg border border-green-200">
+            <MapPin className="h-5 w-5 text-green-600 mr-2" />
+            <span className="text-green-800">Finca: {activeFarm.nombre}</span>
+          </div>
+        )}
         
         {loadingOptions ? (
           <div className="flex justify-center items-center py-8">

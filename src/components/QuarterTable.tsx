@@ -9,9 +9,11 @@ import Quarter from '../model/Quarter';
 import Variety from '../model/Variety';
 import Employee from '../model/Employee';
 import ToastProps from '../model/ToastProps';
+import { useFarm } from '../context/FarmContext';
 
 const QuarterTable = () => {
   const navigate = useNavigate();
+  const { activeFarm } = useFarm();
   const [quarters, setQuarters] = useState<Quarter[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedQuarter, setSelectedQuarter] = useState<Quarter | null>(null);
@@ -20,14 +22,15 @@ const QuarterTable = () => {
   const [availableEmployees, setAvailableEmployees] = useState<Employee[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastProps | null>(null);
-  const [activeFarmId] = useState<number>(1); // Valor predeterminado o desde contexto
 
   // Función para cargar cuarteles desde la API
   const fetchQuarters = async () => {
+    if (!activeFarm) return;
+
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<Quarter[]>(`/api/cuarteles?fincaId=${activeFarmId}`);
+      const response = await axios.get<Quarter[]>(`/api/cuarteles?fincaId=${activeFarm.id}`);
       setQuarters(response.data);
     } catch (err) {
       console.error('Error al cargar cuarteles:', err);
@@ -41,7 +44,8 @@ const QuarterTable = () => {
   useEffect(() => {
     fetchQuarters();
     fetchOptions();
-  }, [activeFarmId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFarm]);
 
 
   const handleQuarterClick = (quarterId: number | undefined) => {
@@ -99,7 +103,7 @@ const QuarterTable = () => {
         nombre: safeQuarter.nombre,
         sistema: safeQuarter.sistema.charAt(0).toUpperCase() + safeQuarter.sistema.slice(1),
         encargadoId: safeQuarter.managerId,
-        fincaId: activeFarmId || 1, // Usar 1 como valor predeterminado si no está definido
+        fincaId: activeFarm?.id || 1, // Usar 1 como valor predeterminado si no está definido
         variedades: safeQuarter.variedades.map(v => ({
           variedadId: v.id,
           superficie: v.superficie
@@ -327,7 +331,7 @@ const QuarterTable = () => {
           isLoading={isLoading}
           availableVarieties={availableVarieties}
           availableEmployees={availableEmployees}
-          activeFarmId={activeFarmId}
+          activeFarmId={activeFarm?.id ?? -1}
         />
       )}
     </div>

@@ -6,6 +6,7 @@ import axios from 'axios';
 import Toast from './Toast';
 import ReporteVista from '../model/ReporteVista';
 import ReporteCuartel from '../model/ReporteCuartel';
+import { useFarm } from '../context/FarmContext';
 
 // Componente para las filas de variedades animadas
 const AnimatedVarietyRows = ({ 
@@ -97,6 +98,7 @@ const AnimatedVarietyRows = ({
 };
 
 const ReportsTable = () => {
+  const { activeFarm } = useFarm();
   const [selectedReport, setSelectedReport] = useState<ReporteVista | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +117,7 @@ const ReportsTable = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<ReporteCuartel[]>(`/api/reportes/anio/${anioSeleccionado}`);
+      const response = await axios.get<ReporteCuartel[]>(`/api/reportes/anio/${anioSeleccionado}/finca/${activeFarm?.id}`);
       
       // Transformar los datos para incluir tanto cuarteles como variedades
       const transformedReports: ReporteVista[] = [];
@@ -168,7 +170,8 @@ const ReportsTable = () => {
   // Cargar reportes al montar el componente o cambiar el año
   useEffect(() => {
     fetchReports();
-  }, [anioSeleccionado]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anioSeleccionado,activeFarm]);
 
   // Función para alternar la expansión de un cuartel
   const toggleExpansion = (cuartelId: number, e: React.MouseEvent) => {
