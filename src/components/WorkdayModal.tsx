@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Calendar, User, ClipboardList, Droplet } from 'lucide-react';
+import { X, Search, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
 
 interface Employee {
   id: number;
@@ -67,16 +67,18 @@ const WorkdayModal = ({
 
   const [taskSearch, setTaskSearch] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [showTaskList, setShowTaskList] = useState(false); // Estado para controlar la visibilidad de la lista de tareas
   
   // Filtrar tareas basado en búsqueda
   const filteredTasks = tasks.filter(task => 
     task.name.toLowerCase().includes(taskSearch.toLowerCase()) ||
-    task.description.toLowerCase().includes(taskSearch.toLowerCase())
+    (task.description && task.description.toLowerCase().includes(taskSearch.toLowerCase()))
   );
 
   // Inicializar el formulario con los datos del jornal cuando se está editando
   useEffect(() => {
     if (workday) {
+      console.log("Cargando datos de workday:", workday);
       setFormData({
         id: workday.id,
         date: workday.date,
@@ -88,6 +90,15 @@ const WorkdayModal = ({
         variedadId: workday.variedadId,
         variedadName: workday.variedadName
       });
+      
+      // Actualizar el campo de búsqueda de tareas cuando se edita
+      const selectedTask = tasks.find(t => t.id === workday.taskId);
+      if (selectedTask) {
+        setTaskSearch(selectedTask.name);
+      }
+      
+      // No mostrar la lista de tareas al editar inicialmente
+      setShowTaskList(false);
     } else {
       // Valores por defecto para un nuevo jornal
       setFormData({
@@ -100,8 +111,10 @@ const WorkdayModal = ({
         variedadId: undefined,
         variedadName: undefined
       });
+      setTaskSearch('');
+      setShowTaskList(true); // Mostrar la lista de tareas para un nuevo jornal
     }
-  }, [workday]);
+  }, [workday, tasks]);
 
   if (!isOpen) return null;
 
@@ -145,13 +158,29 @@ const WorkdayModal = ({
       
       const workdayToSave: Workday = {
         ...formData,
-        employeeName: employee ? employee.name : '',
-        taskName: task ? task.name : '',
-        variedadName: variedad ? variedad.name : undefined
+        employeeName: employee ? employee.name : formData.employeeName,
+        taskName: task ? task.name : formData.taskName,
+        variedadName: variedad ? variedad.name : formData.variedadName
       };
       
       onSave(workdayToSave);
     }
+  };
+
+  // Función para eliminar la tarea seleccionada
+  const handleClearTask = () => {
+    setFormData({
+      ...formData,
+      taskId: 0,
+      taskName: ''
+    });
+    setTaskSearch('');
+    setShowTaskList(true);
+  };
+
+  // Manejar clic en el campo de búsqueda de tareas
+  const handleTaskSearchClick = () => {
+    setShowTaskList(true);
   };
 
   return (
@@ -272,8 +301,8 @@ const WorkdayModal = ({
                   <Droplet className="h-5 w-5 text-gray-400" />
                 </div>
                 <select
-                required
-                  value={formData.variedadId || ''}
+                  required
+                  value={formData.variedadId !== undefined ? formData.variedadId : ''}
                   onChange={(e) => {
                     const select = e.target;
                     const value = select.value;
@@ -311,54 +340,79 @@ const WorkdayModal = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tarea
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <ClipboardList className="h-5 w-5 text-gray-400" />
+            
+            {/* Si hay una tarea seleccionada, mostrar la información con opción para eliminarla */}
+            {formData.taskId > 0 ? (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-gray-700">Tarea seleccionada:</div>
+                    <div className="text-gray-600">{formData.taskName}</div>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={handleClearTask}
+                    className="text-red-500 hover:text-red-700 ml-2"
+                    title="Eliminar tarea seleccionada"
+                  >
+                    <XCircle className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
-              <input
-                type="text"
-                value={taskSearch}
-                onChange={(e) => setTaskSearch(e.target.value)}
-                placeholder="Buscar tarea..."
-                className="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="mt-2 max-h-40 overflow-y-auto">
-              {filteredTasks.map(task => (
-                <button
-                  type="button"
-                  key={task.id}
-                  onClick={() => {
-                    setFormData({
-                      ...formData,
-                      taskId: task.id,
-                      taskName: task.name
-                    });
-                    setTaskSearch('');
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg ${
-                    formData.taskId === task.id ? 'bg-blue-50 text-blue-700' : ''
-                  }`}
-                >
-                  <div className="font-medium">{task.name}</div>
-                  {task.description && (
-                    <div className="text-sm text-gray-500">{task.description}</div>
-                  )}
-                </button>
-              ))}
-            </div>
+            ) : (
+              /* Si no hay tarea seleccionada, mostrar el buscador y la lista */
+              <>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <ClipboardList className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={taskSearch}
+                    onChange={(e) => setTaskSearch(e.target.value)}
+                    onClick={handleTaskSearchClick}
+                    placeholder="Buscar tarea..."
+                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                {showTaskList && (
+                  <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
+                    {filteredTasks.length > 0 ? (
+                      filteredTasks.map(task => (
+                        <button
+                          type="button"
+                          key={task.id}
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              taskId: task.id,
+                              taskName: task.name
+                            });
+                            setTaskSearch(task.name);
+                            setShowTaskList(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium">{task.name}</div>
+                          {task.description && (
+                            <div className="text-sm text-gray-500">{task.description}</div>
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-gray-500 text-center">
+                        No se encontraron tareas
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+            
             {errors.taskId && (
               <p className="mt-1 text-sm text-red-500">{errors.taskId}</p>
             )}
           </div>
-
-          {formData.taskId > 0 && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <div className="font-medium text-gray-700">Tarea seleccionada:</div>
-              <div className="text-gray-600">{formData.taskName}</div>
-            </div>
-          )}
-      
           
           <div className="flex justify-end space-x-3 mt-6">
             <button
