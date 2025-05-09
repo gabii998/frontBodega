@@ -1,5 +1,7 @@
-import React from 'react';
+// src/components/EmployeeModal.tsx (solución robusta)
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import EmployeeModalProps from '../model/EmployeeModalProps';
 import Employee from '../model/Employee';
 import axios from 'axios';
@@ -11,31 +13,43 @@ const EmployeeModal = ({
   employee,
   isLoading = false
 }: EmployeeModalProps) => {
-  const [formData, setFormData] = React.useState<Employee>({
+  const [formData, setFormData] = useState<Employee>({
     nombre: employee?.nombre || '',
     dni: employee?.dni || ''
   });
 
-  const [validationErrors, setValidationErrors] = React.useState({
+  const [validationErrors, setValidationErrors] = useState({
     name: '',
     dni: ''
   });
 
-  const [serverError, setServerError] = React.useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [animationClass, setAnimationClass] = useState("modalIn");
 
-  React.useEffect(() => {
-    if (employee) {
-      setFormData({
-        id: employee.id,
-        nombre: employee.nombre,
-        dni: employee.dni
-      });
-    } else {
-      setFormData({ nombre: '', dni: '' });
+  useEffect(() => {
+    if (isOpen) {
+      if (employee) {
+        setFormData({
+          id: employee.id,
+          nombre: employee.nombre,
+          dni: employee.dni
+        });
+      } else {
+        setFormData({ nombre: '', dni: '' });
+      }
+      
+      setValidationErrors({ name: '', dni: '' });
+      setServerError(null);
+      setAnimationClass("modalIn");
+      
+      // Bloquear desplazamiento del body cuando el modal está abierto
+      document.body.style.overflow = 'hidden';
     }
-    // Limpiar errores al abrir el modal
-    setValidationErrors({ name: '', dni: '' });
-    setServerError(null);
+    
+    return () => {
+      // Restaurar desplazamiento cuando se desmonta el componente
+      document.body.style.overflow = 'auto';
+    };
   }, [employee, isOpen]);
 
   if (!isOpen) return null;
@@ -61,6 +75,18 @@ const EmployeeModal = ({
     return isValid;
   };
 
+  const handleClose = () => {
+    setAnimationClass("modalOut");
+  };
+
+  const handleAnimationEnd = () => {
+    if (animationClass === "modalOut") {
+      onClose();
+      // Restaurar desplazamiento cuando se cierra el modal
+      document.body.style.overflow = 'auto';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -68,11 +94,10 @@ const EmployeeModal = ({
       setServerError(null);
       try {
         await onSave(formData);
-        // Éxito - el componente padre se encargará de cerrar el modal
+        handleClose();
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          // Capturar y mostrar el error del servidor
-          if (error.response && error.response.data && error.response.data.message) {
+          if (error.response?.data?.message) {
             setServerError(error.response.data.message);
           } else {
             setServerError('Ocurrió un error al guardar el empleado. Intente nuevamente.');
@@ -86,83 +111,106 @@ const EmployeeModal = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          disabled={isLoading}
-          type="button"
+  // Usar createPortal para renderizar el modal directamente en el body
+  return createPortal(
+    <div className="modal-overlay">
+      {/* Overlay de fondo - cubrir toda la pantalla */}
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 z-50" 
+        onClick={handleClose}
+        style={{ opacity: animationClass === "modalOut" ? 0 : 1, transition: "opacity 0.3s" }}
+      ></div>
+      
+      {/* Contenedor centrado del modal */}
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div 
+          className={`bg-white rounded-lg w-full max-w-md p-6 relative shadow-xl ${animationClass}`}
+          onClick={(e) => e.stopPropagation()}
+          onAnimationEnd={handleAnimationEnd}
         >
-          <X className="h-6 w-6" />
-        </button>
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isLoading}
+            type="button"
+          >
+            <X className="h-6 w-6" />
+          </button>
 
-        <h2 className="text-xl font-semibold mb-4">
-          {employee ? 'Editar Empleado' : 'Nuevo Empleado'}
-        </h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {employee ? 'Editar Empleado' : 'Nuevo Empleado'}
+          </h2>
 
-        {serverError && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {serverError}
-          </div>
-        )}
+          {serverError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {serverError}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre Completo
-            </label>
-            <input
-              type="text"
-              value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.name ? 'border-red-500' : 'border-gray-300'
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre Completo
+              </label>
+              <input
+                type="text"
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  validationErrors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
-              disabled={isLoading}
-            />
-            {validationErrors.name && (
-              <p className="mt-1 text-sm text-red-500">{validationErrors.name}</p>
-            )}
-          </div>
+                disabled={isLoading}
+              />
+              {validationErrors.name && (
+                <p className="mt-1 text-sm text-red-500">{validationErrors.name}</p>
+              )}
+            </div>
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              DNI
-            </label>
-            <input
-              type="text"
-              value={formData.dni}
-              onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.dni ? 'border-red-500' : 'border-gray-300'
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                DNI
+              </label>
+              <input
+                type="text"
+                value={formData.dni}
+                onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  validationErrors.dni ? 'border-red-500' : 'border-gray-300'
                 }`}
-              disabled={isLoading}
-            />
-            {validationErrors.dni && (
-              <p className="mt-1 text-sm text-red-500">{validationErrors.dni}</p>
-            )}
-          </div>
+                disabled={isLoading}
+              />
+              {validationErrors.dni && (
+                <p className="mt-1 text-sm text-red-500">{validationErrors.dni}</p>
+              )}
+            </div>
 
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border border-gray-300"
-              disabled={isLoading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Guardando...' : 'Guardar'}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border border-gray-300 transition-colors hover:bg-gray-50"
+                disabled={isLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Guardando...
+                  </span>
+                ) : 'Guardar'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body // Renderiza el modal directamente en el body para evitar problemas de posicionamiento
   );
 };
 
