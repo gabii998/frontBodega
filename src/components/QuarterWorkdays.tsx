@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios, { AxiosResponse } from 'axios';
 import Toast from './Toast';
 import Workday from '../model/Workday';
-import Quarter from '../model/Quarter';
+import {Quarter} from '../model/Quarter';
 import Employee from '../model/Employee';
 import Task from '../model/Task';
 

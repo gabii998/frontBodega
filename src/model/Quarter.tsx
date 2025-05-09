@@ -1,6 +1,6 @@
 import VarietyCuartel from "./VarietyCuartel";
 
-export default interface Quarter {
+export interface Quarter {
     id?: number;
     nombre: string;
     variedades: VarietyCuartel[];
@@ -9,3 +9,13 @@ export default interface Quarter {
     superficieTotal: number;
     sistema?: 'parral' | 'espaldero' | null;
   }
+
+  export const createQuarterBase = (): Quarter => ({
+    nombre: '',
+    variedades: [],
+    managerId: null,
+    encargadoNombre: null,
+    superficieTotal: 0,
+    sistema: 'parral',
+  });
+  

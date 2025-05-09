@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import QuarterModal from './QuarterModal';
-import Quarter from '../model/Quarter';
+import {Quarter} from '../model/Quarter';
 import Variety from '../model/Variety';
 import Employee from '../model/Employee';
 import ToastProps from '../model/ToastProps';
