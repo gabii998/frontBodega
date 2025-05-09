@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Variety from '../model/Variety';
+import { createPortal } from 'react-dom';
 
 interface VarietyModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ const VarietyModal = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
         <button
@@ -116,7 +117,7 @@ const VarietyModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,document.body
   );
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
 import Workday from '../model/Workday';
 import WorkdayModalProps from '../model/WorkdayModalProps';
+import { createPortal } from 'react-dom';
 
 const WorkdayModal = ({ 
   isOpen, 
@@ -134,7 +135,7 @@ const WorkdayModal = ({
     setShowTaskList(true);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-lg p-6 relative">
         <button
@@ -383,7 +384,7 @@ const WorkdayModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,document.body
   );
 };
 
