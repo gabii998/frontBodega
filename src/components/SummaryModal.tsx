@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import GeneralSummary from '../model/GeneralSummary';
 import SummaryModalProps from '../model/SummaryModalProps';
 
 
 const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) => {
-  const [formData, setFormData] = React.useState<GeneralSummary>(summary);
+  const [formData, setFormData] = useState<GeneralSummary>(summary);
 
   if (!isOpen) return null;
 
@@ -20,7 +20,7 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
     { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
     { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
     { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
-    { key: 'performance', label: 'Rendimiento', suffix: '%' }
+    { key: 'performance', label: 'Rendimiento', suffix: 'qq/Jor' }
   ];
 
   return (
@@ -48,8 +48,6 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
                   onChange={(e) => setFormData({ ...formData, [key]: parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-20"
                   required
-                  min={0}
-                  step={key === 'performance' ? '0.1' : '1'}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                   {suffix}

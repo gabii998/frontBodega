@@ -74,7 +74,6 @@ export const generateReportPDF = ({
         doc.setFontSize(fontSize);
         const pageWidth = doc.internal.pageSize.getWidth();
         const contentWidth = pageWidth - leftMargin - rightMargin;
-
         items.forEach(item => {
             const textWidth = doc.getTextWidth(item.text);
             let x: number;
@@ -93,6 +92,7 @@ export const generateReportPDF = ({
 
             doc.text(item.text, x, yPosition);
         });
+        yPosition += lineHeight;
     };
 
     // Helper para añadir texto
@@ -128,20 +128,26 @@ export const generateReportPDF = ({
         : report.quarter.superficieTotal;
 
     // Título del documento
+    let nombreVariedad = '';
+
     addText(`Cuartel: ${report.quarter.nombre}`, 12, true);
     if (report.esVariedad && report.variedadNombre) {
-        addText(`Variedad: ${report.variedadNombre}`, 12, true);
+        nombreVariedad = `Variedad: ${report.variedadNombre}`;
+    } else {
+        nombreVariedad = 'Resumen de cuartel';
     }
+
     addMultiAlignedText([
-        { text: `Año: ${report.date}`, align: 'left' },
+        { text: nombreVariedad, align: 'left' },
         { text: `Superficie: ${superficie} hectáreas`, align: 'right' }
     ], margin, margin, 12);
 
-    addSeparator();
+    addMultiAlignedText([
+        { text: `Año: ${report.date}`, align: 'left' },
+        { text: `${report.hileras ?? 0} hileras`, align: 'right' }
+    ], margin, margin, 12);
 
-    const totalJornales = report.esVariedad && detalleVariedad
-        ? detalleVariedad.jornalesTotales
-        : report.totalWorkdays;
+    addSeparator();
 
     // Tareas Manuales
     if (manualSummary.tasks.length > 0) {
@@ -183,7 +189,7 @@ export const generateReportPDF = ({
         doc.setFont(undefined, 'bold');
         addMultiAlignedText([
                 { text: `Total Tareas Mecanicas`, align: 'left' },
-                { text: `${(mechanicalSummary.totalHours / 8).toFixed(1)}`, align: 'center' },
+                { text: `${((mechanicalSummary.totalHours / 8)).toFixed(1)}`, align: 'center' },
                 { text: `${mechanicalSummary.workdaysPerHectare?.toFixed(2) || '0.00'}`, align: 'right' }
             ], margin, margin, 11);
         yPosition += sectionSpacing;

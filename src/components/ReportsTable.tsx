@@ -169,7 +169,9 @@ const ReportsTable = () => {
 
   // Cargar reportes al montar el componente o cambiar el año
   useEffect(() => {
-    fetchReports();
+    if(activeFarm != null && activeFarm != undefined) {
+      fetchReports();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anioSeleccionado,activeFarm]);
 

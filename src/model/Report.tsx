@@ -1,4 +1,4 @@
-import Quarter from "./Quarter";
+import {Quarter} from "./Quarter";
 
 export default interface Report {
   id: number;
@@ -13,4 +13,5 @@ export default interface Report {
   variedadNombre?: string;
   esVariedad?: boolean;
   superficie?: number; // Superficie específica de la variedad (cuando es un reporte de variedad)
+  hileras:number;
 }
