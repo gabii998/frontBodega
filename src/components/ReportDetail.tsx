@@ -8,13 +8,17 @@ import DetalleVariedad from '../model/DetalleVariedad';
 import CategorySummary from '../model/CategorySummary';
 import TaskSummary from '../model/TaskSummary';
 import SummaryFields from '../model/SummaryFields';
+import ToastProps from '../model/ToastProps';
+import Toast from './Toast';
+import IndicadoresDto from '../model/IndicadoresDto';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
+  const [toast, setToast] = useState<ToastProps | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [, setIsLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [generalSummary, setGeneralSummary] = useState<GeneralSummary>({
-    jornalesTotales:report.totalWorkdays,
+    jornalesTotales: report.totalWorkdays,
     structure: 0,
     productiveTotal: report.totalWorkdays,
     nonProductiveWorkdays: Math.round(report.totalWorkdays * 0.06), // Aproximadamente 6% no productivos
@@ -26,13 +30,76 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   // Estado para almacenar los datos específicos de la variedad cuando corresponda
   const [detalleVariedad, setDetalleVariedad] = useState<DetalleVariedad | null>(null);
 
+  const fetchIndicadores = async () => {
+    if (!report.quarter.id) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Determinar el endpoint según si es cuartel o variedad
+      const endpoint = report.esVariedad && report.variedadId
+        ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/indicadores`
+        : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/indicadores`;
+
+      const response = await axios.get<IndicadoresDto>(endpoint);
+
+      if (response.data) {
+        setGeneralSummary({
+          jornalesTotales: report.totalWorkdays,
+          structure: response.data.estructura,
+          productiveTotal: response.data.totalProductivo,
+          nonProductiveWorkdays: response.data.jornalesNoProductivos,
+          totalPaidWorkdays: response.data.jornalesPagados,
+          performance: response.data.rendimiento,
+          quintalPorJornal: response.data.quintalPorJornal
+        });
+      }
+    } catch (err) {
+      console.error('Error al cargar indicadores:', err);
+
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        // Si no hay indicadores guardados, usar valores por defecto calculados
+        const calculatedSummary = calculateDefaultIndicadores();
+        setGeneralSummary(calculatedSummary);
+      } else {
+        setError('Error al cargar los indicadores');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const calculateDefaultIndicadores = (): GeneralSummary => {
+    const totalJornales = report.totalWorkdays;
+    const estructura = Math.round(totalJornales * 0.02); // Aproximadamente 2% para estructura
+    const jornalesNoProductivos = Math.round(totalJornales * 0.06); // Aproximadamente 6% no productivos
+    const jornalesPagados = totalJornales + jornalesNoProductivos + estructura;
+    const productiveTotal = totalJornales;
+
+    // Calcular quintales por jornal basándose en el rendimiento
+    // Asumiendo que el rendimiento está en qq/ha y tenemos los jornales/ha
+    const jornalesPorHectarea = report.superficie ? totalJornales / report.superficie : 0;
+    const quintalPorJornal = jornalesPorHectarea > 0 ? report.performance / jornalesPorHectarea : 0;
+
+    return {
+      jornalesTotales: totalJornales,
+      structure: estructura,
+      productiveTotal: productiveTotal,
+      nonProductiveWorkdays: jornalesNoProductivos,
+      totalPaidWorkdays: jornalesPagados,
+      performance: report.performance,
+      quintalPorJornal: Number(quintalPorJornal.toFixed(2))
+    };
+  };
+
   // Obtener los datos detallados para una variedad específica
   const fetchDetalleVariedad = async () => {
     if (!report.esVariedad || !report.variedadId) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Usar el nuevo endpoint para obtener detalles completos
       const response = await axios.get<DetalleVariedad>(
@@ -52,6 +119,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     if (report.esVariedad && report.variedadId) {
       fetchDetalleVariedad();
     }
+    fetchIndicadores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report]);
 
@@ -60,7 +128,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     // Si es una variedad específica y tenemos datos, usar esos datos
     if (report.esVariedad && detalleVariedad) {
       const superficie = detalleVariedad.superficie || 1;
-      
+
       // Crear summaries para tareas manuales
       const manualTasks: TaskSummary[] = detalleVariedad.tareasManuales.map(tarea => ({
         taskId: tarea.idTarea,
@@ -68,7 +136,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         totalHours: tarea.jornales * 8,
         workdaysPerHectare: tarea.jornales / superficie
       }));
-      
+
       // Crear summaries para tareas mecánicas
       const mechanicalTasks: TaskSummary[] = detalleVariedad.tareasMecanicas.map(tarea => ({
         taskId: tarea.idTarea,
@@ -76,7 +144,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         totalHours: tarea.jornales * 8,
         workdaysPerHectare: tarea.jornales / superficie
       }));
-      
+
       return {
         manual: {
           totalHours: detalleVariedad.jornalesManuales * 8,
@@ -93,7 +161,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
     // Si es un reporte general o no tenemos datos específicos, usar los datos aproximados
     const superficie = report.quarter.superficieTotal || 1;
-    
+
     return {
       manual: {
         totalHours: report.manualWorkdays * 8,
@@ -132,9 +200,62 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const manualSummary: CategorySummary = taskData.manual;
   const mechanicalSummary: CategorySummary = taskData.mechanical;
 
-  const handleSaveSummary = (newSummary: GeneralSummary) => {
-    setGeneralSummary(newSummary);
-    // Aquí se podría implementar una llamada al backend para guardar los cambios
+  const handleSaveSummary = async (newSummary: GeneralSummary) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Determinar si es un reporte de cuartel o de variedad
+      const endpoint = report.esVariedad && report.variedadId
+        ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/indicadores`
+        : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/indicadores`;
+
+      // Crear el objeto de datos que se enviará al backend
+      const indicadoresData = {
+        estructura: newSummary.structure,
+        totalProductivo: newSummary.productiveTotal,
+        jornalesNoProductivos: newSummary.nonProductiveWorkdays,
+        jornalesPagados: newSummary.totalPaidWorkdays,
+        rendimiento: newSummary.performance,
+        quintalPorJornal: newSummary.quintalPorJornal
+      };
+
+      // Enviar los datos al backend
+      const response = await axios.put(endpoint, indicadoresData);
+
+      if (response.data) {
+        // Actualizar el estado local con los nuevos datos
+        setGeneralSummary(newSummary);
+
+        // Mostrar mensaje de éxito
+        setToast({
+          type: 'success',
+          message: 'Indicadores actualizados correctamente'
+        });
+      }
+    } catch (err) {
+      console.error('Error al guardar los indicadores:', err);
+
+      // Manejar diferentes tipos de errores
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 404) {
+          setError('No se encontró el reporte para actualizar');
+        } else if (err.response?.status === 400) {
+          setError('Datos inválidos. Por favor verifique los valores ingresados');
+        } else {
+          setError(err.response?.data?.message || 'Error al guardar los indicadores');
+        }
+      } else {
+        setError('Error al conectar con el servidor');
+      }
+
+      setToast({
+        type: 'error',
+        message: 'Error al guardar los indicadores'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderCategoryTable = (type: 'manual' | 'mecanica', summary: CategorySummary) => {
@@ -168,7 +289,6 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm text-gray-600">
-                  <span>Total horas: {task.totalHours.toFixed(1)}</span>
                   <span>Total jornales: {(task.totalHours / 8).toFixed(1)}</span>
                 </div>
               </div>
@@ -182,7 +302,6 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
               </span>
             </div>
             <div className="flex justify-between items-center text-sm text-gray-600 mt-1">
-              <span>Total horas: {(summary.totalHours || 0).toFixed(1)}</span>
               <span>Total jornales: {((summary.totalHours || 0) / 8).toFixed(1)}</span>
             </div>
           </div>
@@ -203,12 +322,19 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
       { key: 'performance', label: 'Rendimiento', suffix: 'qq/ha' },
       { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
     ];
-    
 
-    
-  
+
+
+
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            onClose={() => setToast(null)}
+          />
+        )}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-blue-50">
           <div className="flex items-center gap-2">
             <BarChart className="h-5 w-5 text-blue-500" />
@@ -237,7 +363,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     );
   };
 
-  
+
   return (
     <div className="p-6">
       <div className="flex items-center space-x-4 mb-6">
