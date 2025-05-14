@@ -257,6 +257,9 @@ const QuarterTable = () => {
                   Superficie (ha)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Hileras
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -285,6 +288,9 @@ const QuarterTable = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {quarter.superficieTotal} ha
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {quarter.hileras}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-3">

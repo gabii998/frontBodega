@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2, MapPin } from 'lucide-react';
 import axios from 'axios';
 import QuarterModalProps from '../model/QuarterModalProps';
-import {Quarter} from '../model/Quarter';
+import {createQuarterBase, Quarter} from '../model/Quarter';
 import { useFarm } from '../context/FarmContext';
 import { createPortal } from 'react-dom';
 
@@ -15,14 +15,7 @@ const QuarterModal = ({
   availableVarieties,
   availableEmployees }: QuarterModalProps) => {
   const { activeFarm } = useFarm();
-  const [formData, setFormData] = useState<Quarter>({
-    nombre: '',
-    variedades: [],
-    managerId: 0,
-    encargadoNombre: '',
-    superficieTotal: 0,
-    sistema: 'parral'
-  });
+  const [formData, setFormData] = useState<Quarter>(createQuarterBase);
 
   const [loadingOptions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -38,14 +31,7 @@ const QuarterModal = ({
         setFormData(quarter);
       } else {
         // Reiniciar el formulario para un nuevo cuartel
-        setFormData({
-          nombre: '',
-          variedades: [],
-          managerId: 0,
-          encargadoNombre: '',
-          superficieTotal: 0,
-          sistema: 'parral'
-        });
+        setFormData(createQuarterBase);
       }
       setErrors({});
       setShowNewVarietyForm(false);
@@ -82,7 +68,8 @@ const QuarterModal = ({
         variedades: [...formData.variedades, {
           id: variety.id,
           nombre: variety.name,
-          superficie: 0
+          superficie: 0,
+          hileras:0
         }]
       });
       setErrors({
@@ -99,11 +86,20 @@ const QuarterModal = ({
     });
   };
 
-  const handleVarietyChange = (id: number, superficie: number) => {
+  const handleVarietyChange = (id: number,superficie: number) => {
     setFormData({
       ...formData,
       variedades: formData.variedades.map(v =>
         v.id === id ? { ...v, superficie } : v
+      )
+    });
+  };
+
+  const handleHilerasChange = (id: number,hileras: number) => {
+    setFormData({
+      ...formData,
+      variedades: formData.variedades.map(v =>
+        v.id === id ? { ...v, hileras } : v
       )
     });
   };
@@ -146,7 +142,8 @@ const QuarterModal = ({
         variedades: [...formData.variedades, {
           id: newVariety.id,
           nombre: newVariety.name,
-          superficie: 0
+          superficie: 0,
+          hileras:0
         }]
       });
 
@@ -364,6 +361,9 @@ const QuarterModal = ({
                           Superficie (ha)
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Hileras
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
                         </th>
                       </tr>
@@ -390,6 +390,18 @@ const QuarterModal = ({
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                                 step="0.01"
                                 min="0"
+                                disabled={isLoading}
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <input
+                                type="number"
+                                value={variety.hileras || ''}
+                                onChange={(e) => handleHilerasChange(variety.id ?? -1, Number(e.target.value))}
+                                placeholder="Hileras"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                step="1"
+                                min="1"
                                 disabled={isLoading}
                               />
                             </td>

@@ -7,6 +7,7 @@ export interface Quarter {
     managerId?: number | null;
     encargadoNombre?: string | null;
     superficieTotal: number;
+    hileras:number;
     sistema?: 'parral' | 'espaldero' | null;
   }
 
@@ -17,5 +18,6 @@ export interface Quarter {
     encargadoNombre: null,
     superficieTotal: 0,
     sistema: 'parral',
+    hileras:0
   });
   

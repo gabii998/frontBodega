@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, PenTool as Tool, ArrowLeft, BarChart, Edit } from 'lucide-react';
+import { Users, PenTool as Tool, ArrowLeft, BarChart, Edit, Download } from 'lucide-react';
 import SummaryModal from './SummaryModal';
 import axios from 'axios';
 import GeneralSummary from '../model/GeneralSummary';
@@ -11,8 +11,10 @@ import SummaryFields from '../model/SummaryFields';
 import ToastProps from '../model/ToastProps';
 import Toast from './Toast';
 import IndicadoresDto from '../model/IndicadoresDto';
+import { generateReportPDF } from '../utils/pdfGenerator';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [toast, setToast] = useState<ToastProps | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [, setIsLoading] = useState(false);
@@ -29,6 +31,33 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   // Estado para almacenar los datos específicos de la variedad cuando corresponda
   const [detalleVariedad, setDetalleVariedad] = useState<DetalleVariedad | null>(null);
+
+  const handleGeneratePDF = async () => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      generateReportPDF({
+        report,
+        detalleVariedad,
+        generalSummary,
+        manualSummary,
+        mechanicalSummary
+      });
+      
+      setToast({
+        type: 'success',
+        message: 'PDF generado correctamente'
+      });
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      setToast({
+        type: 'error',
+        message: 'Error al generar el PDF'
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   const fetchIndicadores = async () => {
     if (!report.quarter.id) return;
@@ -386,6 +415,23 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             Reporte del año {report.date}
           </p>
         </div>
+        <button
+          onClick={handleGeneratePDF}
+          disabled={isGeneratingPDF}
+          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
+        >
+          {isGeneratingPDF ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Generando PDF...
+            </>
+          ) : (
+            <>
+              <Download className="h-5 w-5 mr-2" />
+              Exportar PDF
+            </>
+          )}
+        </button>
       </div>
 
       <div className="space-y-6">
