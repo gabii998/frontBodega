@@ -26,44 +26,6 @@ export const generateReportPDF = ({
     const contentWidth = pageWidth - (margin * 2);
     let yPosition = margin;
     const lineHeight = 7;
-    const sectionSpacing = 10;
-
-    // Helper para alinear texto a la derecha
-    const addRightAlignedText = (
-        doc: jsPDF,
-        text: string,
-        y: number,
-        rightMargin: number = 20,
-        fontSize: number = 10
-    ) => {
-        doc.setFontSize(fontSize);
-        const textWidth = doc.getTextWidth(text);
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const x = pageWidth - rightMargin - textWidth;
-        doc.text(text, x, y);
-    };
-
-    // Helper para añadir texto con alineación justificada (izquierda y derecha)
-    const addJustifiedText = (
-        doc: jsPDF,
-        leftText: string,
-        rightText: string,
-        y: number,
-        leftMargin: number = 20,
-        rightMargin: number = 20,
-        fontSize: number = 10
-    ) => {
-        doc.setFontSize(fontSize);
-
-        // Texto izquierdo
-        doc.text(leftText, leftMargin, y);
-
-        // Texto derecho
-        const textWidth = doc.getTextWidth(rightText);
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const x = pageWidth - rightMargin - textWidth;
-        doc.text(rightText, x, y);
-    };
 
     const addMultiAlignedText = (
         items: { text: string; align: 'left' | 'center' | 'right' }[],
