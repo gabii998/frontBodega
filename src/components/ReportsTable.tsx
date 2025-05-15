@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Calendar, ChevronRight, ChevronDown } from 'lucide-react';
+import { Calendar, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import ReportDetail from './ReportDetail';
 import axios from 'axios';
@@ -45,7 +45,7 @@ const AnimatedVarietyRows = ({
           className="bg-gray-50 hover:bg-gray-100 cursor-pointer flex w-full border-b border-gray-100 last:border-b-0"
           onClick={() => onVarietyClick(variety)}
         >
-          <div className="px-6 py-4 w-2/5">
+          <div className="px-6 py-4 w-1/3">
             <div className="flex items-center">
               <div className="ml-9">
                 <div className="font-medium text-gray-700">
@@ -55,31 +55,33 @@ const AnimatedVarietyRows = ({
               </div>
             </div>
           </div>
-          <div className="px-6 py-4 w-1/5">
+          <div className="px-6 py-4 w-1/6">
             <div className="flex items-center text-gray-700">
               <Calendar className="h-5 w-5 text-gray-400 mr-2" />
               <span>{variety.fecha}</span>
             </div>
           </div>
-          <div className="px-6 py-4 text-gray-700 w-1/5">
+          <div className="px-6 py-4 text-gray-700 w-1/6">
             <div>
               <div className="font-medium">{variety.totalJornales.toFixed(2)} jornales</div>
             </div>
           </div>
-          <div className="px-6 py-4 w-1/5">
+          <div className="px-6 py-4 w-1/6">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
               {variety.rendimiento} qq/Ha
             </span>
           </div>
-          <div className="px-6 py-4">
+          <div className="px-6 py-4 w-1/6">
             <button 
-              className="text-blue-600 hover:text-blue-800"
+              className="flex items-center px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onVarietyClick(variety);
               }}
+              title="Ver reporte de la variedad"
             >
-              <ChevronRight className="h-5 w-5" />
+              <FileText className="h-4 w-4 mr-1" />
+              Ver Reporte
             </button>
           </div>
         </div>
@@ -299,19 +301,19 @@ const ReportsTable = () => {
           <div className="min-w-full">
             {/* Encabezados de la tabla */}
             <div className="bg-gray-50 flex border-b border-gray-200">
-              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
                 Cuartel / Variedad
               </div>
-              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Fecha
               </div>
-              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Jornales
               </div>
-              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Rendimiento
               </div>
-              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Acciones
               </div>
             </div>
@@ -333,10 +335,15 @@ const ReportsTable = () => {
                     <div key={cuartel.id}>
                       {/* Fila del cuartel */}
                       <div 
-                        className={`hover:bg-gray-50 cursor-pointer flex ${isExpanded ? 'border-b-0' : 'border-b border-gray-200'}`}
-                        onClick={(e) => toggleExpansion(cuartel.cuartelId, e)}
+                        className={`hover:bg-gray-50 ${hasVarieties ? 'cursor-pointer' : ''} flex ${isExpanded ? 'border-b-0' : 'border-b border-gray-200'}`}
+                        onClick={(e) => {
+                          // Solo expandir/contraer si hacen clic en cualquier lugar excepto los botones
+                          if (hasVarieties && (e.target as HTMLElement).closest('button') === null) {
+                            toggleExpansion(cuartel.cuartelId, e);
+                          }
+                        }}
                       >
-                        <div className="px-6 py-4 w-2/5">
+                        <div className="px-6 py-4 w-1/3">
                           <div className="flex items-center">
                             {hasVarieties && (
                               <div 
@@ -353,35 +360,52 @@ const ReportsTable = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="px-6 py-4 w-1/5">
+                        <div className="px-6 py-4 w-1/6">
                           <div className="flex items-center">
                             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
                             <span>{cuartel.fecha}</span>
                           </div>
                         </div>
-                        <div className="px-6 py-4 w-1/5">
+                        <div className="px-6 py-4 w-1/6">
                           <div>
                             <div className="font-medium text-gray-900">{cuartel.totalJornales.toFixed(2)} jornales</div>
                             
                           </div>
                         </div>
-                        <div className="px-6 py-4 w-1/5">
+                        <div className="px-6 py-4 w-1/6">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
                             {cuartel.rendimiento} qq/Ha
                           </span>
                         </div>
-                        <div className="px-6 py-4">
-                          {hasVarieties && (
-                            <button 
-                              className="text-blue-600 hover:text-blue-800"
-                              onClick={(e) => toggleExpansion(cuartel.cuartelId, e)}
+                        <div className="px-6 py-4 w-1/6">
+                          <div className="flex items-center space-x-3">
+                            {/* Botón para ver el reporte del cuartel */}
+                            <button
+                              className="flex items-center px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedReport(cuartel);
+                              }}
+                              title="Ver reporte del cuartel"
                             >
-                              {isExpanded ? 
-                                <ChevronDown className="h-5 w-5 transition-transform duration-300 transform" /> : 
-                                <ChevronRight className="h-5 w-5 transition-transform duration-300 transform" />
-                              }
+                              <FileText className="h-4 w-4 mr-1" />
+                              Ver Reporte
                             </button>
-                          )}
+                            
+                            {/* Botón para expandir/colapsar variedades */}
+                            {hasVarieties && (
+                              <button 
+                                className="flex items-center px-3 py-1.5 text-xs text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                                onClick={(e) => toggleExpansion(cuartel.cuartelId, e)}
+                                title={isExpanded ? "Ocultar variedades" : "Mostrar variedades"}
+                              >
+                                {isExpanded ? 
+                                  <ChevronDown className="h-5 w-5 ml-1" /> : 
+                                  <ChevronRight className="h-5 w-5 ml-1" />
+                                }
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                       

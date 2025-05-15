@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import GeneralSummary from '../model/GeneralSummary';
 import SummaryModalProps from '../model/SummaryModalProps';
+import { createPortal } from 'react-dom';
 
 
 const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) => {
@@ -21,14 +22,14 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
   };
 
   const fields: { key: keyof GeneralSummary; label: string; suffix: string }[] = [
-    { key: 'structure', label: 'Estructura', suffix: 'jornales' },
-    { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
-    { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
-    { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
+    // { key: 'structure', label: 'Estructura', suffix: 'jornales' },
+    // { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
+    // { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
+    // { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
     { key: 'performance', label: 'Rendimiento', suffix: 'qq/Ha' }
   ];
 
-  return (
+  return createPortal (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
         <button
@@ -78,7 +79,7 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
           </div>
         </form>
       </div>
-    </div>
+    </div>,document.body
   );
 };
 

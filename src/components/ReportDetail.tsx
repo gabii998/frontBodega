@@ -23,8 +23,8 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     jornalesTotales: report.totalWorkdays,
     structure: 0,
     productiveTotal: report.totalWorkdays,
-    nonProductiveWorkdays: Math.round(report.totalWorkdays * 0.06), // Aproximadamente 6% no productivos
-    totalPaidWorkdays: Math.round(report.totalWorkdays * 1.06), // Total + no productivos
+    nonProductiveWorkdays: 0,
+    totalPaidWorkdays: 0,
     performance: report.performance,
     quintalPorJornal: 0
   });
@@ -34,7 +34,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   const handleGeneratePDF = async () => {
     setIsGeneratingPDF(true);
-    
+
     try {
       generateReportPDF({
         report,
@@ -43,7 +43,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         manualSummary,
         mechanicalSummary
       });
-      
+
       setToast({
         type: 'success',
         message: 'PDF generado correctamente'
@@ -124,16 +124,14 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   // Obtener los datos detallados para una variedad específica
   const fetchDetalleVariedad = async () => {
-    if (!report.esVariedad || !report.variedadId) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      // Usar el nuevo endpoint para obtener detalles completos
-      const response = await axios.get<DetalleVariedad>(
-        `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/detalle`
-      );
+      const endpoint = report.esVariedad && report.variedadId
+        ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/detalle`
+        : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/detalle`;
+      const response = await axios.get<DetalleVariedad>(endpoint);
       setDetalleVariedad(response.data);
     } catch (err) {
       console.error('Error al cargar datos de variedad:', err);
@@ -145,89 +143,39 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   // Cargar datos de la variedad al montar el componente si corresponde
   useEffect(() => {
-    if (report.esVariedad && report.variedadId) {
-      fetchDetalleVariedad();
-    }
+    fetchDetalleVariedad();
     fetchIndicadores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report]);
+  }, [report,generalSummary]);
 
   // Configuramos los datos de las tareas según si es un reporte general o de variedad
-  const getTaskData = (): { manual: CategorySummary; mechanical: CategorySummary } => {
-    // Si es una variedad específica y tenemos datos, usar esos datos
-    if (report.esVariedad && detalleVariedad) {
+  const getTaskData = (): { manual: CategorySummary; mechanical: CategorySummary } | null => {
+    if (detalleVariedad != null) {
       const superficie = detalleVariedad.superficie || 1;
-
-      // Crear summaries para tareas manuales
-      const manualTasks: TaskSummary[] = detalleVariedad.tareasManuales.map(tarea => ({
-        taskId: tarea.idTarea,
-        taskName: tarea.nombreTarea,
-        totalHours: tarea.jornales * 8,
-        workdaysPerHectare: tarea.jornales / superficie
-      }));
-
-      // Crear summaries para tareas mecánicas
-      const mechanicalTasks: TaskSummary[] = detalleVariedad.tareasMecanicas.map(tarea => ({
-        taskId: tarea.idTarea,
-        taskName: tarea.nombreTarea,
-        totalHours: tarea.jornales * 8,
-        workdaysPerHectare: tarea.jornales / superficie
-      }));
+      const manualTasks: TaskSummary[] = detalleVariedad.tareasManuales;
+      const mechanicalTasks: TaskSummary[] = detalleVariedad.tareasMecanicas;
 
       return {
         manual: {
           totalHours: detalleVariedad.jornalesManuales * 8,
+          jornales: detalleVariedad.jornalesManuales,
           workdaysPerHectare: detalleVariedad.jornalesManuales / superficie,
           tasks: manualTasks
         },
         mechanical: {
           totalHours: detalleVariedad.jornalesMecanicos * 8,
+          jornales: detalleVariedad.jornalesMecanicos,
           workdaysPerHectare: detalleVariedad.jornalesMecanicos / superficie,
           tasks: mechanicalTasks
         }
       };
     }
-
-    // Si es un reporte general o no tenemos datos específicos, usar los datos aproximados
-    const superficie = report.quarter.superficieTotal || 1;
-
-    return {
-      manual: {
-        totalHours: report.manualWorkdays * 8,
-        workdaysPerHectare: report.manualWorkdays / superficie,
-        tasks: [
-          {
-            taskId: 1,
-            taskName: 'Poda de formación',
-            totalHours: report.manualWorkdays * 4,
-            workdaysPerHectare: (report.manualWorkdays / 2) / superficie
-          },
-          {
-            taskId: 3,
-            taskName: 'Cosecha manual',
-            totalHours: report.manualWorkdays * 4,
-            workdaysPerHectare: (report.manualWorkdays / 2) / superficie
-          }
-        ]
-      },
-      mechanical: {
-        totalHours: report.mechanicalWorkdays * 8,
-        workdaysPerHectare: report.mechanicalWorkdays / superficie,
-        tasks: [
-          {
-            taskId: 2,
-            taskName: 'Riego por goteo',
-            totalHours: report.mechanicalWorkdays * 8,
-            workdaysPerHectare: report.mechanicalWorkdays / superficie
-          }
-        ]
-      }
-    };
+    return null;
   };
 
   const taskData = getTaskData();
-  const manualSummary: CategorySummary = taskData.manual;
-  const mechanicalSummary: CategorySummary = taskData.mechanical;
+  const manualSummary: CategorySummary | null = taskData?.manual ?? null;
+  const mechanicalSummary: CategorySummary | null = taskData?.mechanical ?? null;
 
   const handleSaveSummary = async (newSummary: GeneralSummary) => {
     setIsLoading(true);
@@ -287,7 +235,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     }
   };
 
-  const renderCategoryTable = (type: 'manual' | 'mecanica', summary: CategorySummary) => {
+  const renderCategoryTable = (type: 'manual' | 'mecanica', summary: CategorySummary | null) => {
     const icon = type === 'manual' ? (
       <Users className="h-5 w-5 text-indigo-500" />
     ) : (
@@ -304,22 +252,23 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="divide-y divide-gray-200">
-          {summary.tasks.length === 0 ? (
+          {summary == null || summary.tasks.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
               No hay tareas registradas
             </div>
           ) : (
             summary.tasks.map(task => (
-              <div key={task.taskId} className="p-4">
+              <div key={task.idTarea} className="p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-900">{task.taskName}</span>
-                  <span className="text-sm text-gray-500">
-                    {task.workdaysPerHectare.toFixed(2)} jornales/ha
+                  <span className="font-medium text-gray-900 w-1/3">{task.nombreTarea}</span>
+                  <span className="text-sm text-gray-500 w-1/3 text-center block">
+                    {(task.jornales).toFixed(2)} Jornales
+                  </span>
+                  <span className="text-sm text-gray-500 w-1/3 text-right block">
+                    {(task.jornales / (report.superficie ?? 1)).toFixed(2)} jornales/ha
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-sm text-gray-600">
-                  <span>Total jornales: {(task.totalHours / 8).toFixed(1)}</span>
-                </div>
+
               </div>
             ))
           )}
@@ -327,11 +276,11 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div className="flex justify-between items-center font-medium">
               <span className="text-gray-900">Total Categoría</span>
               <span className="text-gray-900">
-                {summary.workdaysPerHectare?.toFixed(2) || "0.00"} jornales/ha
+                {((summary?.totalHours || 0) / 8).toFixed(2)} Jornales
               </span>
-            </div>
-            <div className="flex justify-between items-center text-sm text-gray-600 mt-1">
-              <span>Total jornales: {((summary.totalHours || 0) / 8).toFixed(1)}</span>
+              <span className="text-gray-900">
+                {summary?.workdaysPerHectare?.toFixed(2) || "0.00"} jornales/ha
+              </span>
             </div>
           </div>
         </div>
@@ -341,19 +290,15 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   const renderGeneralSummary = (summary: GeneralSummary) => {
     const summaryFields: SummaryFields[] = [
-      { key: 'jornalesTotales', label: 'Total General', suffix: 'jornales' },
-      ...(!report.esVariedad ? [
-        { key: 'structure', label: 'Estructura', suffix: 'jornales' } as SummaryFields,
-        { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' } as SummaryFields,
-        { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' } as SummaryFields,
-        { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' } as SummaryFields
-      ] : []),
+      // ...(!report.esVariedad ? [
+      //   { key: 'structure', label: 'Estructura', suffix: 'jornales' } as SummaryFields,
+      //   { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' } as SummaryFields,
+      //   { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' } as SummaryFields,
+      //   { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' } as SummaryFields
+      // ] : []),
       { key: 'performance', label: 'Rendimiento', suffix: 'qq/ha' },
       { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
     ];
-
-
-
 
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -377,12 +322,23 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           </button>
         </div>
         <div className="divide-y divide-gray-200">
+          <div className="p-4">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gray-900 w-1/3">Total General:</span>
+              <span className="text-gray-900 w-1/3 text-center block">
+                {summary.jornalesTotales} jornales
+              </span>
+              <span className="text-gray-900 w-1/3 text-end block">
+                {summary.jornalesTotales} jornales/ha
+              </span>
+            </div>
+          </div>
           {summaryFields.map(({ key, label, suffix }) => (
             <div key={key} className="p-4">
               <div className="flex justify-between items-center">
                 <span className="font-medium text-gray-900">{label}</span>
                 <span className="text-gray-900">
-                  {summary[key]} {suffix}
+                  {summary[key].toFixed(2)} {suffix}
                 </span>
               </div>
             </div>
@@ -396,42 +352,49 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   return (
     <div className="p-6">
       <div className="flex items-center space-x-4 mb-6">
-        <button
-          onClick={onBack}
-          className="text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800">
-            {report.quarter.nombre}
-            {report.esVariedad && report.variedadNombre && (
-              <span className="text-lg font-normal ml-2">
-                - {report.variedadNombre}
-              </span>
+        <span className='flex w-1/2'>
+          <button
+            onClick={onBack}
+            className="text-gray-600 hover:text-gray-800 mr-4"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-800">
+              {report.quarter.nombre}
+              {report.esVariedad && report.variedadNombre && (
+                <span className="text-lg font-normal ml-2">
+                  - {report.variedadNombre}
+                </span>
+              )}
+            </h2>
+            <p className="text-gray-500">
+              Reporte del año {report.date}
+            </p>
+          </div>
+        </span>
+
+        <span className='w-1/2 content-end inline-flex justify-end'>
+          <button
+            onClick={handleGeneratePDF}
+            disabled={isGeneratingPDF}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
+          >
+            {isGeneratingPDF ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Generando PDF...
+              </>
+            ) : (
+              <>
+                <Download className="h-5 w-5 mr-2" />
+                Exportar PDF
+              </>
             )}
-          </h2>
-          <p className="text-gray-500">
-            Reporte del año {report.date}
-          </p>
-        </div>
-        <button
-          onClick={handleGeneratePDF}
-          disabled={isGeneratingPDF}
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
-        >
-          {isGeneratingPDF ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Generando PDF...
-            </>
-          ) : (
-            <>
-              <Download className="h-5 w-5 mr-2" />
-              Exportar PDF
-            </>
-          )}
-        </button>
+          </button>
+        </span>
+
+
       </div>
 
       <div className="space-y-6">
@@ -457,8 +420,8 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         </div>
 
         <div className="space-y-6">
-          {renderCategoryTable('manual', manualSummary)}
           {renderCategoryTable('mecanica', mechanicalSummary)}
+          {renderCategoryTable('manual', manualSummary)}
           {renderGeneralSummary(generalSummary)}
         </div>
       </div>

@@ -1,6 +1,5 @@
 export default interface TaskSummary {
-  taskId: number;
-  taskName: string;
-  totalHours: number;
-  workdaysPerHectare: number;
+  idTarea: number;
+  nombreTarea: string;
+  jornales: number;
 }

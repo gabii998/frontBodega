@@ -6,4 +6,4 @@ export default interface GeneralSummary {
     totalPaidWorkdays: number;
     performance: number;//qq/ha
     quintalPorJornal:number;
-  }
+}

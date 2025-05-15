@@ -9,8 +9,8 @@ interface GeneratePDFParams {
     report: Report;
     detalleVariedad: DetalleVariedad | null;
     generalSummary: GeneralSummary;
-    manualSummary: CategorySummary;
-    mechanicalSummary: CategorySummary;
+    manualSummary: CategorySummary | null;
+    mechanicalSummary: CategorySummary | null;
 }
 
 export const generateReportPDF = ({
@@ -147,68 +147,69 @@ export const generateReportPDF = ({
         { text: `${report.hileras ?? 0} hileras`, align: 'right' }
     ], margin, margin, 12);
 
-    addSeparator();
 
-    // Tareas Manuales
-    if (manualSummary.tasks.length > 0) {
-        addText('TAREAS MANUALES', 14, true);
-
-        doc.setFont(undefined, 'normal');
-        manualSummary.tasks.forEach(task => {
-            addMultiAlignedText([
-                { text: `${task.taskName}`, align: 'left' },
-                { text: `${task.totalHours / 8}`, align: 'center' },
-                { text: `${task.workdaysPerHectare.toFixed(2)}`, align: 'right' }
-            ], margin, margin, 11);
-            yPosition += 5;
-        });
-
-        doc.setFont(undefined, 'bold');
-        addMultiAlignedText([
-                { text: `Total Tareas Manuales`, align: 'left' },
-                { text: `${(manualSummary.totalHours / 8).toFixed(1)}`, align: 'center' },
-                { text: `${manualSummary.workdaysPerHectare?.toFixed(2) || '0.00'}`, align: 'right' }
-            ], margin, margin, 11);
-        yPosition += sectionSpacing;
-    }
     addSeparator();
     // Tareas Mecánicas
-    if (mechanicalSummary.tasks.length > 0) {
+    if (mechanicalSummary != null && mechanicalSummary.tasks.length > 0) {
         addText('TAREAS MECÁNICAS', 14, true);
 
         doc.setFont(undefined, 'normal');
         mechanicalSummary.tasks.forEach(task => {
             addMultiAlignedText([
-                { text: `${task.taskName}`, align: 'left' },
-                { text: `${task.totalHours / 8}`, align: 'center' },
-                { text: `${task.workdaysPerHectare.toFixed(2)}`, align: 'right' }
+                { text: `${task.nombreTarea}`, align: 'left' },
+                { text: `${task.jornales}`, align: 'center' },
+                { text: `${(task.jornales/(report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
             ], margin, margin, 11);
-            yPosition += 5;
+            yPosition += 1;
         });
 
         doc.setFont(undefined, 'bold');
         addMultiAlignedText([
                 { text: `Total Tareas Mecanicas`, align: 'left' },
-                { text: `${((mechanicalSummary.totalHours / 8)).toFixed(1)}`, align: 'center' },
+                { text: `${mechanicalSummary.jornales.toFixed(2)}`, align: 'center' },
                 { text: `${mechanicalSummary.workdaysPerHectare?.toFixed(2) || '0.00'}`, align: 'right' }
             ], margin, margin, 11);
-        yPosition += sectionSpacing;
     }
+
+    addSeparator();
+
+    // Tareas Manuales
+    if (manualSummary != null && manualSummary.tasks.length > 0) {
+        addText('TAREAS MANUALES', 14, true);
+
+        doc.setFont(undefined, 'normal');
+        manualSummary.tasks.forEach(task => {
+            addMultiAlignedText([
+                { text: `${task.nombreTarea}`, align: 'left' },
+                { text: `${task.jornales}`, align: 'center' },
+                { text: `${(task.jornales/(report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
+            ], margin, margin, 11);
+            yPosition += 1;
+        });
+
+        doc.setFont(undefined, 'bold');
+        addMultiAlignedText([
+                { text: `Total Tareas Manuales`, align: 'left' },
+                { text: `${manualSummary.jornales.toFixed(2)}`, align: 'center' },
+                { text: `${manualSummary.workdaysPerHectare?.toFixed(2) || '0.00'}`, align: 'right' }
+            ], margin, margin, 11);
+    }
+    
 
     // Indicadores
     addSeparator();
 
-    addText(`Total General: ${generalSummary.jornalesTotales} jornales`);
+    addText(`Total General: ${generalSummary.jornalesTotales} jornales`,11,true);
 
-    if (!report.esVariedad) {
-        addText(`Estructura: ${generalSummary.structure} jornales`);
-        addText(`Total Productivos: ${generalSummary.productiveTotal} jornales`);
-        addText(`Jornales No Productivos: ${generalSummary.nonProductiveWorkdays} jornales`);
-        addText(`Total Jornales Pagados: ${generalSummary.totalPaidWorkdays} jornales`);
-    }
+    // if (!report.esVariedad) {
+    //     addText(`Estructura: ${generalSummary.structure} jornales`);
+    //     addText(`Total Productivos: ${generalSummary.productiveTotal} jornales`);
+    //     addText(`Jornales No Productivos: ${generalSummary.nonProductiveWorkdays} jornales`);
+    //     addText(`Total Jornales Pagados: ${generalSummary.totalPaidWorkdays} jornales`);
+    // }
 
-    addText(`Rendimiento: ${generalSummary.performance} qq/ha`);
-    addText(`Quintales por Jornal: ${generalSummary.quintalPorJornal} qq/Jor`);
+    addText(`Rendimiento: ${generalSummary.performance} qq/ha`,11,true);
+    addText(`Quintales por Jornal: ${generalSummary.quintalPorJornal.toFixed(2)} qq/Jor`,11,true);
 
     // Pie de página
     yPosition = 270;
