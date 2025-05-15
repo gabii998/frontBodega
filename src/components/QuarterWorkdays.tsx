@@ -68,7 +68,7 @@ const QuarterWorkdays = () => {
     const fetchWorkdays = async () => {
       try {
         // Filtramos por cuartel ID
-        const response = await axios.get(`/api/jornales?cuartelId=${id}`);
+        const response = await axios.get(`/api/jornales/${id}`);
 
         // Mapear la respuesta de la API al formato local
         const mappedWorkdays = response.data.map(mapApiWorkday);
@@ -348,7 +348,7 @@ const QuarterWorkdays = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex items-center">
                       <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                      {workday.jornales.toFixed(1)}
+                      {workday.jornales.toFixed(2)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

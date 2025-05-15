@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { BarChart, Calendar, ChevronRight, ChevronDown } from 'lucide-react';
+import { Calendar, ChevronRight, ChevronDown } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import ReportDetail from './ReportDetail';
 import axios from 'axios';
@@ -63,21 +63,12 @@ const AnimatedVarietyRows = ({
           </div>
           <div className="px-6 py-4 text-gray-700 w-1/5">
             <div>
-              <div className="font-medium">{variety.totalJornales.toFixed(1)} jornales</div>
-              <div className="text-sm text-gray-500">
-                {(variety.totalJornales / variety.superficie).toFixed(2)} jornales/ha
-              </div>
+              <div className="font-medium">{variety.totalJornales.toFixed(2)} jornales</div>
             </div>
           </div>
           <div className="px-6 py-4 w-1/5">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              variety.rendimiento >= 85 
-                ? 'bg-green-100 text-green-800'
-                : variety.rendimiento >= 70
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {variety.rendimiento}%
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
+              {variety.rendimiento} qq/Ha
             </span>
           </div>
           <div className="px-6 py-4">
@@ -133,7 +124,8 @@ const ReportsTable = () => {
           totalJornales: reporte.jornalesTotales,
           rendimiento: reporte.rendimiento,
           superficie: reporte.superficie,
-          esVariedad: false
+          esVariedad: false,
+          hileras: reporte.hileras
         });
         
         // Añadir cada variedad como un elemento separado
@@ -149,7 +141,8 @@ const ReportsTable = () => {
             superficie: variedad.superficie,
             variedadId: variedad.variedadId,
             variedadNombre: variedad.variedadNombre,
-            esVariedad: true
+            esVariedad: true,
+            hileras: reporte.hileras
           });
         });
       });
@@ -210,11 +203,6 @@ const ReportsTable = () => {
   }
 
   if (selectedReport) {
-    // Mostrar vista detallada solo para variedades
-    // Para reportes de variedad, usamos la superficie de la variedad
-    // Para reportes de cuartel completo, usamos la superficie total del cuartel
-    const superficie = selectedReport.superficie;
-      
     // Cálculo aproximado de la división entre tareas manuales/mecánicas
     // Esto podría ser reemplazado por datos reales del backend si están disponibles
     const totalJornales = selectedReport.totalJornales;
@@ -231,19 +219,21 @@ const ReportsTable = () => {
           quarter: {
             id: selectedReport.cuartelId,
             nombre: selectedReport.cuartelNombre,
-            superficieTotal: superficie,
-            variedades: []
+            superficieTotal: selectedReport.superficie,
+            variedades: [],
+            hileras: selectedReport.hileras
           },
           date: selectedReport.fecha,
           totalHours: selectedReport.totalHoras,
-          totalWorkdays: totalJornales,
+          totalWorkdays: selectedReport.totalJornales,
           manualWorkdays: manualWorkdays,
           mechanicalWorkdays: mechanicalWorkdays,
           performance: selectedReport.rendimiento,
           variedadId: selectedReport.variedadId,
           variedadNombre: selectedReport.variedadNombre,
           esVariedad: selectedReport.esVariedad,
-          superficie: selectedReport.superficie
+          superficie: selectedReport.superficie,
+          hileras: selectedReport.hileras
         }}
         onBack={() => setSelectedReport(null)}
       />
@@ -355,7 +345,6 @@ const ReportsTable = () => {
                                 <ChevronRight className="h-5 w-5" />
                               </div>
                             )}
-                            <BarChart className="h-5 w-5 text-gray-400 mr-2" />
                             <div>
                               <div className="font-medium text-gray-900">
                                 {cuartel.cuartelNombre}
@@ -372,19 +361,13 @@ const ReportsTable = () => {
                         </div>
                         <div className="px-6 py-4 w-1/5">
                           <div>
-                            <div className="font-medium text-gray-900">{cuartel.totalJornales.toFixed(1)} jornales</div>
-                            <div className="text-sm text-gray-500">{cuartel.totalHoras.toFixed(1)} horas</div>
+                            <div className="font-medium text-gray-900">{cuartel.totalJornales.toFixed(2)} jornales</div>
+                            
                           </div>
                         </div>
                         <div className="px-6 py-4 w-1/5">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            cuartel.rendimiento >= 85 
-                              ? 'bg-green-100 text-green-800'
-                              : cuartel.rendimiento >= 70
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {cuartel.rendimiento}%
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
+                            {cuartel.rendimiento} qq/Ha
                           </span>
                         </div>
                         <div className="px-6 py-4">

@@ -7,6 +7,7 @@ export default interface ReporteVista {
   totalJornales: number; // jornalesTotales
   rendimiento: number;
   superficie: number;
+  hileras:number;
   variedadId?: number; // Opcional para reportes generales de cuartel
   variedadNombre?: string; // Opcional para reportes generales de cuartel
   esVariedad: boolean; // Indica si este elemento es una variedad específica

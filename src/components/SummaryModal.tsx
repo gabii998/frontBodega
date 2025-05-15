@@ -15,12 +15,17 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
     onClose();
   };
 
+  const handleInputChange = (key: keyof GeneralSummary, value: string) => {
+    const numericValue = value === '' ? 0 : parseFloat(value);
+    setFormData({ ...formData, [key]: numericValue });
+  };
+
   const fields: { key: keyof GeneralSummary; label: string; suffix: string }[] = [
     { key: 'structure', label: 'Estructura', suffix: 'jornales' },
     { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
     { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
     { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
-    { key: 'performance', label: 'Rendimiento', suffix: 'qq/Jor' }
+    { key: 'performance', label: 'Rendimiento', suffix: 'qq/Ha' }
   ];
 
   return (
@@ -44,8 +49,8 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
               <div className="relative">
                 <input
                   type="number"
-                  value={formData[key]}
-                  onChange={(e) => setFormData({ ...formData, [key]: parseFloat(e.target.value) || 0 })}
+                  value={formData[key] === 0 ? '' : formData[key]}
+                  onChange={(e) => handleInputChange(key, e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-20"
                   required
                 />
