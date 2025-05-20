@@ -1,30 +1,26 @@
-import React, { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { apiCall } from '../utils/apiUtil';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      await login(email, password);
-      // Redireccionar al dashboard después de iniciar sesión
-      navigate('/dashboard');
-    } catch {
-      setError('Usuario o contraseña incorrectos');
-    } finally {
-      setIsLoading(false);
-    }
+    apiCall({
+      setError:setError,
+      setLoading:setIsLoading,
+      errorMessage:'Ha ocurrido un error al iniciar sesion',
+      serverCall: login(email,password),
+      onSuccess: () => { navigate('/dashboard'); }
+    })
   };
 
   return (

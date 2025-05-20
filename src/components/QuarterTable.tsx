@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Map } from 'lucide-react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import QuarterModal from './QuarterModal';
 import {Quarter} from '../model/Quarter';
 import Variety from '../model/Variety';
-import Employee from '../model/Employee';
-import ToastProps from '../model/ToastProps';
+import {Employee} from '../model/Employee';
+import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import { useFarm } from '../context/FarmContext';
+import { varietyService } from '../services/VarietyService';
+import { employeeService } from '../services/employeeService';
+import { quarterService } from '../services/QuarterService';
 
 const QuarterTable = () => {
   const navigate = useNavigate();
@@ -23,30 +25,26 @@ const QuarterTable = () => {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastProps | null>(null);
 
-  // Función para cargar cuarteles desde la API
-  const fetchQuarters = async () => {
-    if (!activeFarm) return;
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get<Quarter[]>(`/api/cuarteles?fincaId=${activeFarm.id}`);
-      setQuarters(response.data);
-    } catch (err) {
-      console.error('Error al cargar cuarteles:', err);
-      setError('No se pudieron cargar los cuarteles. Por favor, intente de nuevo.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Cargar datos iniciales
   useEffect(() => {
     fetchQuarters();
     fetchOptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFarm]);
 
+  const fetchQuarters = async () => {
+    if (!activeFarm) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await await quarterService.getAll(activeFarm.id);
+      setQuarters(response);
+    } catch {
+      setError('No se pudieron cargar los cuarteles. Por favor, intente de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleQuarterClick = (quarterId: number | undefined) => {
     if (quarterId) {
@@ -54,112 +52,33 @@ const QuarterTable = () => {
     }
   };
 
-  // Cargar variedades y empleados
   const fetchOptions = async () => {
     try {
-      // Cargar variedades
-      const varietiesResponse = await axios.get<{ id: number, nombre: string }[]>('/api/variedades');
-      const mappedVarieties = varietiesResponse.data.map(v => ({
-        id: v.id,
-        name: v.nombre
-      }));
-      setAvailableVarieties(mappedVarieties);
-
-      // Cargar empleados
-      const employeesResponse = await axios.get<{ id: number, nombre: string, dni: string }[]>('/api/empleados');
-      const mappedEmployees = employeesResponse.data.map(e => ({
-        id: e.id,
-        nombre: e.nombre,
-        dni: e.dni
-      }));
-      setAvailableEmployees(mappedEmployees);
-    } catch (err) {
-      console.error('Error al cargar opciones:', err);
-      setToast({
-        type: 'error',
-        message: 'Error al cargar variedades o empleados'
-      });
+      const varietiesResponse = await await varietyService.getAll();
+      setAvailableVarieties(varietiesResponse);
+      const employeesResponse = await employeeService.getAll();
+      setAvailableEmployees(employeesResponse);
+    } catch {
+      errorToast('Error al cargar variedades o empleados');
     }
   };
 
-  // Función para guardar un cuartel (crear o actualizar)
   const handleSaveQuarter = async (quarter: Quarter) => {
-    console.log('Quarter recibido:', quarter);
-    
     setIsLoading(true);
     try {
-      // Asegurarse de que todos los campos tengan valores predeterminados
-      const safeQuarter = {
-        ...quarter,
-        nombre: quarter.nombre || '',
-        sistema: quarter.sistema || 'parral',
-        managerId: quarter.managerId || 0,
-        variedades: quarter.variedades || []
-      };
-      
-      // Transformar el quarter del formato del frontend al formato de la API
-      const apiQuarterData = {
-        id: safeQuarter.id,
-        nombre: safeQuarter.nombre,
-        sistema: safeQuarter.sistema.charAt(0).toUpperCase() + safeQuarter.sistema.slice(1),
-        encargadoId: safeQuarter.managerId,
-        fincaId: activeFarm?.id || 1, // Usar 1 como valor predeterminado si no está definido
-        variedades: safeQuarter.variedades.map(v => ({
-          variedadId: v.id,
-          superficie: v.superficie
-        }))
-      };
-      
-      console.log('Datos a enviar a la API:', apiQuarterData);
-      
-      let response;
+      let response:Quarter;
       if (quarter.id) {
-        // Actualizar cuartel existente
-        response = await axios.put(`/api/cuarteles/${quarter.id}`, apiQuarterData);
+        response = await quarterService.update(quarter);
+        setQuarters(quarters.map(q => q.id === quarter.id ? response : q));
       } else {
-        // Crear nuevo cuartel
-        response = await axios.post('/api/cuarteles', apiQuarterData);
+        response = await quarterService.create(quarter);
+        setQuarters([...quarters, response]);
       }
-      
-      // Transformar la respuesta del formato API al formato frontend
-      const savedQuarter: Quarter = response.data;
-      
-      // Actualizar la lista de cuarteles
-      if (quarter.id) {
-        setQuarters(quarters.map(q => q.id === quarter.id ? savedQuarter : q));
-      } else {
-        setQuarters([...quarters, savedQuarter]);
-      }
-      
-      // Cerrar el modal
       setIsModalOpen(false);
       setSelectedQuarter(null);
-      
-      // Mostrar notificación de éxito
-      setToast({
-        type: 'success',
-        message: quarter.id ? 'Cuartel actualizado correctamente' : 'Cuartel creado correctamente'
-      });
-      
-    } catch (err) {
-      if(axios.isAxiosError(err)) {
-        // Mostrar notificación de error
-      setToast({
-        type: 'error',
-        message: `Error al ${quarter.id ? 'actualizar' : 'crear'} el cuartel: ${err.response?.data?.message || err.message}`
-      });
-      } else if (err instanceof Error) {
-        setToast({
-          type: 'error',
-          message: err.message
-        });
-      } else {
-        setToast({
-          type: 'error',
-          message: `Ha ocurrido un error`
-        });
-      }
-      
+      successToast(quarter.id ? 'Cuartel actualizado correctamente' : 'Cuartel creado correctamente')
+    } catch {
+      errorToast(`Error al ${quarter.id ? 'actualizar' : 'crear'} el cuartel.`)
     } finally {
       setIsLoading(false);
     }
@@ -170,21 +89,11 @@ const QuarterTable = () => {
     if (confirm('¿Está seguro de que desea eliminar este cuartel?')) {
       setIsLoading(true);
       try {
-        await axios.delete(`/api/cuarteles/${id}`);
-        
-        // Eliminar el cuartel del estado
+        await quarterService.delete(id);
         setQuarters(quarters.filter(q => q.id !== id));
-        
-        setToast({
-          type: 'success',
-          message: 'Cuartel eliminado correctamente'
-        });
-      } catch (err) {
-        console.error('Error al eliminar cuartel:', err);
-        setToast({
-          type: 'error',
-          message: 'Error al eliminar el cuartel'
-        });
+        successToast('Cuartel eliminado correctamente')
+      } catch {
+        errorToast('Error al eliminar el cuartel');
       } finally {
         setIsLoading(false);
       }

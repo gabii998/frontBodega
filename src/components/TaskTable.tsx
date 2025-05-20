@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, ClipboardList, PenTool as Tool, Users } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
-import axios from 'axios';
 import Task from '../model/Task';
-import ToastProps from '../model/ToastProps';
+import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import TaskModal from './TaskModal';
+import { taskService } from '../services/TaskService';
 
 const TaskTable = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -20,10 +20,9 @@ const TaskTable = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<Task[]>('/api/tareas');
-      setTasks(response.data);
-    } catch (err) {
-      console.error('Error al cargar tareas:', err);
+      const response = await taskService.getAll();
+      setTasks(response);
+    } catch {
       setError('No se pudieron cargar las tareas. Por favor, intente de nuevo.');
     } finally {
       setIsLoading(false);
@@ -37,57 +36,20 @@ const TaskTable = () => {
   const handleSaveTask = async (task: Omit<Task, 'id'>) => {
     setIsLoading(true);
     try {
-      // Transformar los datos para enviar al backend
-      const apiData = {
-        nombre: task.nombre,
-        tipo: task.tipo
-      };
-
       if (selectedTask) {
-        // Actualizar tarea existente
-        const response = await axios.put<Task>(`/api/tareas/${selectedTask.id}`, apiData);
-        
-        // Actualizar el estado con la respuesta
-        const updatedTask = {
-          id: response.data.id,
-          nombre: response.data.nombre,
-          tipo: response.data.tipo
-        };
-        
-        setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
-        
-        setToast({
-          type: 'success',
-          message: 'Tarea actualizada correctamente'
-        });
+        const response = await taskService.update(selectedTask.id,task);
+        setTasks(tasks.map(t => t.id === selectedTask.id ? response : t));
+        successToast('Tarea actualizada correctamente');
       } else {
-        // Crear nueva tarea
-        const response = await axios.post<Task>('/api/tareas', apiData);
-        
-        // Añadir la nueva tarea al estado
-        const newTask = {
-          id: response.data.id,
-          nombre: response.data.nombre,
-          tipo: response.data.tipo
-        };
-        
-        setTasks([...tasks, newTask]);
-        
-        setToast({
-          type: 'success',
-          message: 'Tarea creada correctamente'
-        });
+        const response = await taskService.create(task);
+        setTasks([...tasks, response]);
+        successToast('Tarea creada correctamente');
       }
-      
       setIsModalOpen(false);
       setSelectedTask(null);
       
-    } catch (err) {
-      console.error('Error al guardar tarea:', err);
-      setToast({
-        type: 'error',
-        message: 'Error al guardar la tarea'
-      });
+    } catch {
+      errorToast('Error al guardar la tarea');
     } finally {
       setIsLoading(false);
     }
@@ -97,21 +59,11 @@ const TaskTable = () => {
     if (confirm('¿Está seguro de que desea eliminar esta tarea?')) {
       setIsLoading(true);
       try {
-        await axios.delete(`/api/tareas/${id}`);
-        
-        // Eliminar la tarea del estado
+        await taskService.delete(id);
         setTasks(tasks.filter(t => t.id !== id));
-        
-        setToast({
-          type: 'success',
-          message: 'Tarea eliminada correctamente'
-        });
-      } catch (err) {
-        console.error('Error al eliminar tarea:', err);
-        setToast({
-          type: 'error',
-          message: 'Error al eliminar la tarea'
-        });
+        successToast('Tarea eliminada correctamente');
+      } catch {
+        errorToast('Error al eliminar la tarea');
       } finally {
         setIsLoading(false);
       }

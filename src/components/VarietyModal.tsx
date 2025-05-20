@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import Variety from '../model/Variety';
+import Variety, { createVariety } from '../model/Variety';
 import { createPortal } from 'react-dom';
 
 interface VarietyModalProps {
@@ -18,32 +18,19 @@ const VarietyModal = ({
   variety,
   isLoading = false
 }: VarietyModalProps) => {
-  const [formData, setFormData] = useState<Variety>({
-    id: 0,
-    name: ''
-  });
+  const [formData, setFormData] = useState<Variety>(createVariety);
   const [errors, setErrors] = useState<{name?: string}>({});
   const [animationClass, setAnimationClass] = useState("modalIn");
 
-  // Inicializar el formulario con los datos de la variedad cuando se está editando
   useEffect(() => {
     if (isOpen) {
       if (variety) {
-        setFormData({
-          id: variety.id,
-          name: variety.name
-        });
+        setFormData(variety);
       } else {
-        setFormData({
-          id: 0,
-          name: ''
-        });
+        setFormData(createVariety);
       }
-      // Limpiar errores
       setErrors({});
       setAnimationClass("modalIn");
-      
-      // Bloquear desplazamiento del body cuando el modal está abierto
       document.body.style.overflow = 'hidden';
     }
     
@@ -58,7 +45,7 @@ const VarietyModal = ({
   const validateForm = () => {
     const newErrors: {name?: string} = {};
     
-    if (!formData.name.trim()) {
+    if (!formData.nombre.trim()) {
       newErrors.name = 'El nombre es obligatorio';
     }
     
@@ -122,8 +109,8 @@ const VarietyModal = ({
               </label>
               <input
                 type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}

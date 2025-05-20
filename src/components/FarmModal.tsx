@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import FarmModalProps from '../model/FarmModalProps';
-import Farm from '../model/Farm';
+import Farm, { defaultFarm } from '../model/Farm';
 
 const FarmModal = ({ isOpen, onClose, onSave, farm, isLoading = false }: FarmModalProps) => {
-  const [formData, setFormData] = useState<Farm>({
-    id: 0,
-    nombre: ''
-  });
+  const [formData, setFormData] = useState<Farm>(defaultFarm);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (farm) {
       setFormData(farm);
     } else {
-      setFormData({
-        id: 0,
-        nombre: ''
-      });
+      setFormData(defaultFarm);
     }
     setErrors({});
   }, [farm, isOpen]);

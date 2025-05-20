@@ -1,10 +1,9 @@
-// src/components/EmployeeModal.tsx (solución robusta)
-import React, { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import EmployeeModalProps from '../model/EmployeeModalProps';
-import Employee from '../model/Employee';
-import axios from 'axios';
+import {createEmployee, Employee} from '../model/Employee';
+import { apiCall } from '../utils/apiUtil';
 
 const EmployeeModal = ({
   isOpen,
@@ -17,12 +16,7 @@ const EmployeeModal = ({
     nombre: employee?.nombre || '',
     dni: employee?.dni || ''
   });
-
-  const [validationErrors, setValidationErrors] = useState({
-    name: '',
-    dni: ''
-  });
-
+  const [validationErrors, setValidationErrors] = useState(createEmployee);
   const [serverError, setServerError] = useState<string | null>(null);
   const [animationClass, setAnimationClass] = useState("modalIn");
 
@@ -35,17 +29,16 @@ const EmployeeModal = ({
           dni: employee.dni
         });
       } else {
-        setFormData({ nombre: '', dni: '' });
+        setFormData(createEmployee);
       }
-      
-      setValidationErrors({ name: '', dni: '' });
+      setValidationErrors(createEmployee);
       setServerError(null);
       setAnimationClass("modalIn");
-      
+
       // Bloquear desplazamiento del body cuando el modal está abierto
       document.body.style.overflow = 'hidden';
     }
-    
+
     return () => {
       // Restaurar desplazamiento cuando se desmonta el componente
       document.body.style.overflow = 'auto';
@@ -56,10 +49,10 @@ const EmployeeModal = ({
 
   const validateForm = (): boolean => {
     let isValid = true;
-    const newErrors = { name: '', dni: '' };
+    const newErrors = { nombre: '', dni: '' };
 
     if (!formData.nombre.trim()) {
-      newErrors.name = 'El nombre es obligatorio';
+      newErrors.nombre = 'El nombre es obligatorio';
       isValid = false;
     }
 
@@ -87,27 +80,17 @@ const EmployeeModal = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (validateForm()) {
-      setServerError(null);
-      try {
-        await onSave(formData);
-        handleClose();
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          if (error.response?.data?.message) {
-            setServerError(error.response.data.message);
-          } else {
-            setServerError('Ocurrió un error al guardar el empleado. Intente nuevamente.');
-          }
-        } else if(error instanceof Error) {
-          setServerError(error.message);
-        } else {
-          setServerError('Ocurrió un error al guardar el empleado. Intente nuevamente.');
-        }
-      }
+      apiCall<void>({
+        setError: setServerError,
+        onSuccess: handleClose,
+        serverCall: onSave(formData),
+        setLoading: null,
+        errorMessage: 'Ocurrió un error al guardar el empleado. Intente nuevamente.'
+      })
     }
   };
 
@@ -115,15 +98,15 @@ const EmployeeModal = ({
   return createPortal(
     <div className="modal-overlay">
       {/* Overlay de fondo - cubrir toda la pantalla */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50" 
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-50"
         onClick={handleClose}
         style={{ opacity: animationClass === "modalOut" ? 0 : 1, transition: "opacity 0.3s" }}
       ></div>
-      
+
       {/* Contenedor centrado del modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div 
+        <div
           className={`bg-white rounded-lg w-full max-w-md p-6 relative shadow-xl ${animationClass}`}
           onClick={(e) => e.stopPropagation()}
           onAnimationEnd={handleAnimationEnd}
@@ -156,13 +139,12 @@ const EmployeeModal = ({
                 type="text"
                 value={formData.nombre}
                 onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  validationErrors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${validationErrors.nombre ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 disabled={isLoading}
               />
-              {validationErrors.name && (
-                <p className="mt-1 text-sm text-red-500">{validationErrors.name}</p>
+              {validationErrors.nombre && (
+                <p className="mt-1 text-sm text-red-500">{validationErrors.nombre}</p>
               )}
             </div>
 
@@ -174,9 +156,8 @@ const EmployeeModal = ({
                 type="text"
                 value={formData.dni}
                 onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  validationErrors.dni ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${validationErrors.dni ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 disabled={isLoading}
               />
               {validationErrors.dni && (

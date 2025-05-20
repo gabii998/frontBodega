@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import GeneralSummary from '../model/GeneralSummary';
 import SummaryModalProps from '../model/SummaryModalProps';
 import { createPortal } from 'react-dom';
+import IndicadoresDto from '../model/IndicadoresDto';
 
 
 const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) => {
-  const [formData, setFormData] = useState<GeneralSummary>(summary);
+  const [formData, setFormData] = useState<IndicadoresDto>(summary);
 
   if (!isOpen) return null;
 
@@ -16,17 +16,17 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
     onClose();
   };
 
-  const handleInputChange = (key: keyof GeneralSummary, value: string) => {
+  const handleInputChange = (key: keyof IndicadoresDto, value: string) => {
     const numericValue = value === '' ? 0 : parseFloat(value);
     setFormData({ ...formData, [key]: numericValue });
   };
 
-  const fields: { key: keyof GeneralSummary; label: string; suffix: string }[] = [
+  const fields: { key: keyof IndicadoresDto; label: string; suffix: string }[] = [
     // { key: 'structure', label: 'Estructura', suffix: 'jornales' },
     // { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
     // { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
     // { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
-    { key: 'performance', label: 'Rendimiento', suffix: 'qq/Ha' }
+    { key: 'rendimiento', label: 'Rendimiento', suffix: 'qq/Ha' }
   ];
 
   return createPortal (

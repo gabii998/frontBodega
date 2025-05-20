@@ -1,5 +1,5 @@
 import Employee from "./Employee";
-import Quarter from "./Quarter";
+import {Quarter} from "./Quarter";
 import Variety from "./Variety";
 
 export default interface QuarterModalProps {

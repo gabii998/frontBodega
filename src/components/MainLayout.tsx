@@ -2,7 +2,6 @@ import PageTransition from "./PageTransition";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-// Componente de layout principal que incluye Sidebar y Topbar
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
       <div className="min-h-screen bg-gray-100">

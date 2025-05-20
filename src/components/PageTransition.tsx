@@ -8,7 +8,6 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Pequeño retardo para asegurar que la animación se inicie correctamente
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 50);
@@ -17,7 +16,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   }, []);
 
   return (
-    <div 
+    <div
       className={`transition-all duration-300 ease-in-out 
                 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
     >

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2, MapPin } from 'lucide-react';
-import axios from 'axios';
 import QuarterModalProps from '../model/QuarterModalProps';
 import {createQuarterBase, Quarter} from '../model/Quarter';
 import { useFarm } from '../context/FarmContext';
 import { createPortal } from 'react-dom';
+import { varietyService } from '../services/VarietyService';
 
 const QuarterModal = ({
   isOpen,
@@ -67,7 +67,7 @@ const QuarterModal = ({
         ...formData,
         variedades: [...formData.variedades, {
           id: variety.id,
-          nombre: variety.name,
+          nombre: variety.nombre,
           superficie: 0,
           hileras:0
         }]
@@ -109,7 +109,7 @@ const QuarterModal = ({
 
     setFormData({
       ...formData,
-      managerId: employeeId,
+      encargadoId: employeeId,
       encargadoNombre: selectedEmployee ? selectedEmployee.nombre : ''
     });
   };
@@ -125,26 +125,10 @@ const QuarterModal = ({
 
     setAddingVariety(true);
     try {
-      // Crear nueva variedad en el backend
-      const response = await axios.post('/api/variedades', {
-        nombre: newVarietyName
-      });
-
-      // Obtener la variedad creada
-      const newVariety = {
-        id: response.data.id,
-        name: response.data.nombre
-      };
-
-      // Agregar la nueva variedad al formulario
+      const response = await varietyService.create(newVarietyName);
       setFormData({
         ...formData,
-        variedades: [...formData.variedades, {
-          id: newVariety.id,
-          nombre: newVariety.name,
-          superficie: 0,
-          hileras:0
-        }]
+        variedades: [...formData.variedades, response]
       });
 
       // Limpiar el formulario de nueva variedad
@@ -173,7 +157,7 @@ const QuarterModal = ({
       newErrors.name = 'El nombre es obligatorio';
     }
 
-    if (formData.managerId === 0) {
+    if (formData.encargadoId === 0) {
       newErrors.managerId = 'Debe seleccionar un encargado';
     }
 
@@ -304,7 +288,7 @@ const QuarterModal = ({
                     Encargado
                   </label>
                   <select
-                    value={formData.managerId ?? 0}
+                    value={formData.encargadoId ?? 0}
                     onChange={(e) => handleEmployeeChange(Number(e.target.value))}
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.managerId ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -447,7 +431,7 @@ const QuarterModal = ({
                           className="px-3 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200"
                           disabled={isLoading}
                         >
-                          {variedad.name}
+                          {variedad.nombre}
                         </button>
                       ))
                     )}

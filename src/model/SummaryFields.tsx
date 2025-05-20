@@ -1,7 +1,7 @@
-import GeneralSummary from "./GeneralSummary";
+import IndicadoresDto from "./IndicadoresDto";
 
 export default interface SummaryFields {
-     key: keyof GeneralSummary; 
+     key: keyof IndicadoresDto; 
      label: string; 
      suffix: string 
 }

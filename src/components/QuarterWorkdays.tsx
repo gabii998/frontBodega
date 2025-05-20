@@ -3,12 +3,16 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Clock, UserCheck, Edit, Trash2 } from 'lucide-react';
 import WorkdayModal from './WorkdayModal';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios, { AxiosResponse } from 'axios';
 import Toast from './Toast';
 import Workday from '../model/Workday';
 import {Quarter} from '../model/Quarter';
-import Employee from '../model/Employee';
+import {Employee} from '../model/Employee';
 import Task from '../model/Task';
+import { quarterService } from '../services/QuarterService';
+import { employeeService } from '../services/employeeService';
+import ToastProps, { errorToast, successToast } from '../model/ToastProps';
+import { taskService } from '../services/TaskService';
+import { workdayService } from '../services/WorkdayService';
 
 
 const mapApiWorkday = (apiWorkday: Workday): Workday => {
@@ -28,53 +32,42 @@ const QuarterWorkdays = () => {
   const [quarter, setQuarter] = useState<Quarter | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
+  const [toast, setToast] = useState<ToastProps | null>(null);
 
-  // Cargar datos del cuartel
   useEffect(() => {
     const fetchQuarter = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`/api/cuarteles/${id}`);
-        setQuarter(response.data);
-        // También guardamos las variedades para usarlas después
-      } catch (err) {
-        console.error('Error al cargar el cuartel:', err);
+        const response = await quarterService.get(id ?? '');
+        setQuarter(response);
+      } catch {
         setError('No se pudo cargar la información del cuartel');
       }
     };
 
-    // Cargar empleados
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get('/api/empleados');
-        setEmployees(response.data);
-      } catch (err) {
-        console.error('Error al cargar empleados:', err);
+        const response = await employeeService.getAll();
+        setEmployees(response);
+      } catch {
+        errorToast('Error al obtener los empleados.')
       }
     };
 
-    // Cargar tareas
     const fetchTasks = async () => {
       try {
-        const response = await axios.get('/api/tareas');
-        setTasks(response.data);
-      } catch (err) {
-        console.error('Error al cargar tareas:', err);
+        const response = await taskService.getAll();
+        setTasks(response);
+      } catch {
+        errorToast('Error al cargar tareas.');
       }
     };
 
-    // Cargar jornales del cuartel
     const fetchWorkdays = async () => {
       try {
-        // Filtramos por cuartel ID
-        const response = await axios.get(`/api/jornales/${id}`);
-
-        // Mapear la respuesta de la API al formato local
-        const mappedWorkdays = response.data.map(mapApiWorkday);
-        setWorkdays(mappedWorkdays);
-      } catch (err) {
-        console.error('Error al cargar jornales:', err);
+        const response = await workdayService.getByQuarter(id ?? '');
+        setWorkdays(response);
+      } catch {
         setError('No se pudieron cargar los jornales de este cuartel');
       } finally {
         setIsLoading(false);
@@ -113,92 +106,33 @@ const QuarterWorkdays = () => {
   const handleDeleteWorkday = async (workdayId: number) => {
     if (window.confirm('¿Está seguro que desea eliminar este jornal?')) {
       try {
-        await axios.delete(`/api/jornales/${workdayId}`);
+        await workdayService.delete(workdayId);
         setWorkdays(workdays.filter(w => w.id !== workdayId));
-        setToast({
-          type: 'success',
-          message: 'Jornal eliminado correctamente'
-        });
-      } catch (err) {
-        console.error('Error al eliminar el jornal:', err);
-        setToast({
-          type: 'error',
-          message: 'Error al eliminar el jornal'
-        });
+        successToast('Jornal eliminado correctamente');
+      } catch {
+        errorToast('Error al eliminar el jornal');
       }
     }
   };
 
   const handleSaveWorkday = async (workdayData: Workday) => {
     try {
-      // Asegurarse de que la fecha se maneja correctamente (sin ajustes de zona horaria)
-      const [year, month, day] = workdayData.fecha.split('-').map(Number);
-      // Crear fecha UTC a las 12:00 para evitar problemas de cambio de día
-      const fechaUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-      const fechaISO = fechaUTC.toISOString();
-
-      // Preparar datos para la API en el formato correcto
-      const apiData = {
-        id: workdayData.id,
-        fecha: fechaISO,
-        jornales: workdayData.jornales,
-        empleadoId: workdayData.empleadoId,
-        tareaId: workdayData.tareaId,
-        variedadId: workdayData.variedadId || null,
-        cuartelId: workdayData.cuartelId
-      };
-
-      let response: AxiosResponse<Workday>;
-
+      let response: Workday;
       if (workdayData.id) {
-        response = await axios.put<Workday>(`/api/jornales/${workdayData.id}`, apiData);
-
+        response = await workdayService.update(workdayData);
         setWorkdays(workdays.map(w =>
-          w.id === workdayData.id ? mapApiWorkday(response.data) : w
+          w.id === workdayData.id ? mapApiWorkday(response) : w
         ));
-
-        setToast({
-          type: 'success',
-          message: 'Jornal actualizado correctamente'
-        });
+        successToast('Jornal actualizado correctamente');
       } else {
-        response = await axios.post('/api/jornales', apiData);
-
-        setWorkdays([...workdays, mapApiWorkday(response.data)]);
-
-        setToast({
-          type: 'success',
-          message: 'Jornal registrado correctamente'
-        });
+        response = await workdayService.create(workdayData);
+        setWorkdays([...workdays, mapApiWorkday(response)]);
+        successToast('Jornal registrado correctamente');
       }
-
       setIsModalOpen(false);
       setSelectedWorkday(null);
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.error('Error al guardar el jornal:', err);
-        let errorMessage = 'Error al guardar el jornal';
-        if (err.response && err.response.data && err.response.data.message) {
-          errorMessage = err.response.data.message;
-        }
-
-        setToast({
-          type: 'error',
-          message: errorMessage
-        });
-      } else if(err instanceof Error) {
-        setToast({
-          type: 'error',
-          message: err.message
-        });
-      } else {
-        setToast({
-          type: 'error',
-          message: JSON.stringify(err)
-        });
-      
-      }
-
+    } catch {
+      errorToast('Error al guardar el jornal');
     }
   };
 

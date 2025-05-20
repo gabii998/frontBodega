@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Leaf } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
-import axios from 'axios';
-import ToastProps from '../model/ToastProps';
+import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Variety from '../model/Variety';
 import VarietyModal from './VarietyModal';
+import { varietyService } from '../services/VarietyService';
 
 const VarietyTable = () => {
   const [varieties, setVarieties] = useState<Variety[]>([]);
@@ -15,87 +15,43 @@ const VarietyTable = () => {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastProps | null>(null);
 
-  // Cargar variedades desde el backend
+  useEffect(() => {
+    fetchVarieties();
+  }, []);
+
   const fetchVarieties = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<{id: number, nombre: string}[]>('/api/variedades');
-      // Transformar la respuesta a nuestro modelo de frontend
-      const mappedVarieties: Variety[] = response.data.map(item => ({
-        id: item.id,
-        name: item.nombre
-      }));
-      setVarieties(mappedVarieties);
-    } catch (err) {
-      console.error('Error al cargar variedades:', err);
+      const response = await varietyService.getAll();
+      setVarieties(response);
+    } catch {
       setError('No se pudieron cargar las variedades. Por favor, intente de nuevo.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchVarieties();
-  }, []);
-
   const handleSaveVariety = async (varietyData: Variety) => {
     setIsLoading(true);
     try {
       if (selectedVariety?.id) {
-        // Actualizar variedad existente
-        const response = await axios.put<{id: number, nombre: string}>(`/api/variedades/${selectedVariety.id}`, {
-          nombre: varietyData.name,
-          id: selectedVariety.id
-        });
-        
-        // Transformar la respuesta y actualizar el estado
-        const updatedVariety: Variety = {
-          id: response.data.id,
-          name: response.data.nombre
-        };
-        
+        const response = await varietyService.update(selectedVariety.id,varietyData.nombre)
         setVarieties(varieties.map(v => 
-          v.id === selectedVariety.id ? updatedVariety : v
+          v.id === selectedVariety.id ? response : v
         ));
-        
-        // Mostrar mensaje de éxito para actualización
-        setToast({
-          type: 'success',
-          message: 'Variedad actualizada correctamente'
-        });
+        successToast('Variedad actualizada correctamente');
       } else {
         // Crear nueva variedad
-        const response = await axios.post<{id: number, nombre: string}>('/api/variedades', {
-          nombre: varietyData.name
-        });
-        
-        // Transformar la respuesta y actualizar el estado
-        const newVariety: Variety = {
-          id: response.data.id,
-          name: response.data.nombre
-        };
-        
-        setVarieties([...varieties, newVariety]);
-        
-        // Mostrar mensaje de éxito para creación
-        setToast({
-          type: 'success',
-          message: 'Variedad creada correctamente'
-        });
+        const response = await varietyService.create(varietyData.nombre);
+        setVarieties([...varieties, response]);
+        successToast('Variedad creada correctamente');
       }
-      
-      // Cerrar el modal si la operación fue exitosa
       setIsModalOpen(false);
       setSelectedVariety(null);
       
-    } catch (error) {
-      console.error('Error al guardar variedad:', error);
-      // Mostrar mensaje de error
-      setToast({
-        type: 'error',
-        message: 'Error al guardar la variedad'
-      });
+    } catch {
+      errorToast('Error al guardar la variedad');
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +61,7 @@ const VarietyTable = () => {
     if (confirm('¿Está seguro de que desea eliminar esta variedad?')) {
       setIsLoading(true);
       try {
-        await axios.delete(`/api/variedades/${id}`);
+        await varietyService.delete(id);
         setVarieties(varieties.filter(v => v.id !== id));
         
         // Mostrar mensaje de éxito para eliminación
@@ -190,7 +146,7 @@ const VarietyTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Leaf className="h-5 w-5 text-green-500 mr-2" />
-                        <span>{variety.name}</span>
+                        <span>{variety.nombre}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

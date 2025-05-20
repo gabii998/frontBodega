@@ -1,6 +1,6 @@
 export default interface VarietyCuartel {
     id?: number;
     nombre: string;
-    superficie: number;
-    hileras:number;
+    superficie?: number | null;
+    hileras?:number | null;
 }

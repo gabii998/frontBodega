@@ -1,36 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Users, PenTool as Tool, ArrowLeft, BarChart, Edit, Download } from 'lucide-react';
 import SummaryModal from './SummaryModal';
-import axios from 'axios';
-import GeneralSummary from '../model/GeneralSummary';
 import ReportDetailProps from '../model/ReportDetailProps';
 import DetalleVariedad from '../model/DetalleVariedad';
 import CategorySummary from '../model/CategorySummary';
 import TaskSummary from '../model/TaskSummary';
 import SummaryFields from '../model/SummaryFields';
-import ToastProps from '../model/ToastProps';
+import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Toast from './Toast';
-import IndicadoresDto from '../model/IndicadoresDto';
 import { generateReportPDF } from '../utils/pdfGenerator';
+import { reportService } from '../services/reportService';
+import IndicadoresDto, { createIndicadores } from '../model/IndicadoresDto';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [toast, setToast] = useState<ToastProps | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [, setIsLoading] = useState(false);
-  const [, setError] = useState<string | null>(null);
-  const [generalSummary, setGeneralSummary] = useState<GeneralSummary>({
-    jornalesTotales: report.totalWorkdays,
-    structure: 0,
-    productiveTotal: report.totalWorkdays,
-    nonProductiveWorkdays: 0,
-    totalPaidWorkdays: 0,
-    performance: report.performance,
-    quintalPorJornal: 0
-  });
-
-  // Estado para almacenar los datos específicos de la variedad cuando corresponda
+  const [generalSummary, setGeneralSummary] = useState<IndicadoresDto>(createIndicadores);
   const [detalleVariedad, setDetalleVariedad] = useState<DetalleVariedad | null>(null);
+
+  useEffect(() => {
+    fetchDetalleVariedad();
+    fetchIndicadores();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report, generalSummary]);
+
 
   const handleGeneratePDF = async () => {
     setIsGeneratingPDF(true);
@@ -43,17 +38,9 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         manualSummary,
         mechanicalSummary
       });
-
-      setToast({
-        type: 'success',
-        message: 'PDF generado correctamente'
-      });
-    } catch (error) {
-      console.error('Error al generar PDF:', error);
-      setToast({
-        type: 'error',
-        message: 'Error al generar el PDF'
-      });
+      successToast('PDF generado correctamente');
+    } catch {
+      errorToast('Error al generar el PDF');
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -61,94 +48,29 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   const fetchIndicadores = async () => {
     if (!report.quarter.id) return;
-
     setIsLoading(true);
-    setError(null);
-
     try {
-      // Determinar el endpoint según si es cuartel o variedad
-      const endpoint = report.esVariedad && report.variedadId
-        ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/indicadores`
-        : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/indicadores`;
-
-      const response = await axios.get<IndicadoresDto>(endpoint);
-
-      if (response.data) {
-        setGeneralSummary({
-          jornalesTotales: report.totalWorkdays,
-          structure: response.data.estructura,
-          productiveTotal: response.data.totalProductivo,
-          nonProductiveWorkdays: response.data.jornalesNoProductivos,
-          totalPaidWorkdays: response.data.jornalesPagados,
-          performance: response.data.rendimiento,
-          quintalPorJornal: response.data.quintalPorJornal
-        });
-      }
-    } catch (err) {
-      console.error('Error al cargar indicadores:', err);
-
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        // Si no hay indicadores guardados, usar valores por defecto calculados
-        const calculatedSummary = calculateDefaultIndicadores();
-        setGeneralSummary(calculatedSummary);
-      } else {
-        setError('Error al cargar los indicadores');
-      }
+      const response = await reportService.getIndicadores(report.date, report.quarter.id, report.variedadId);
+      setGeneralSummary(response);
+    } catch {
+      errorToast('Error al cargar los indicadores');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const calculateDefaultIndicadores = (): GeneralSummary => {
-    const totalJornales = report.totalWorkdays;
-    const estructura = Math.round(totalJornales * 0.02); // Aproximadamente 2% para estructura
-    const jornalesNoProductivos = Math.round(totalJornales * 0.06); // Aproximadamente 6% no productivos
-    const jornalesPagados = totalJornales + jornalesNoProductivos + estructura;
-    const productiveTotal = totalJornales;
-
-    // Calcular quintales por jornal basándose en el rendimiento
-    // Asumiendo que el rendimiento está en qq/ha y tenemos los jornales/ha
-    const jornalesPorHectarea = report.superficie ? totalJornales / report.superficie : 0;
-    const quintalPorJornal = jornalesPorHectarea > 0 ? report.performance / jornalesPorHectarea : 0;
-
-    return {
-      jornalesTotales: totalJornales,
-      structure: estructura,
-      productiveTotal: productiveTotal,
-      nonProductiveWorkdays: jornalesNoProductivos,
-      totalPaidWorkdays: jornalesPagados,
-      performance: report.performance,
-      quintalPorJornal: Number(quintalPorJornal.toFixed(2))
-    };
-  };
-
-  // Obtener los datos detallados para una variedad específica
   const fetchDetalleVariedad = async () => {
     setIsLoading(true);
-    setError(null);
-
     try {
-      const endpoint = report.esVariedad && report.variedadId
-        ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/detalle`
-        : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/detalle`;
-      const response = await axios.get<DetalleVariedad>(endpoint);
-      setDetalleVariedad(response.data);
-    } catch (err) {
-      console.error('Error al cargar datos de variedad:', err);
-      setError('No se pudieron cargar los datos detallados de la variedad');
+      const response = await reportService.getVariedadDetalle(report.date, report.quarter.id ?? 0, report.variedadId ?? 0);
+      setDetalleVariedad(response);
+    } catch {
+      errorToast('No se pudieron cargar los datos detallados de la variedad');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Cargar datos de la variedad al montar el componente si corresponde
-  useEffect(() => {
-    fetchDetalleVariedad();
-    fetchIndicadores();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report,generalSummary]);
-
-  // Configuramos los datos de las tareas según si es un reporte general o de variedad
   const getTaskData = (): { manual: CategorySummary; mechanical: CategorySummary } | null => {
     if (detalleVariedad != null) {
       const superficie = detalleVariedad.superficie || 1;
@@ -177,59 +99,16 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const manualSummary: CategorySummary | null = taskData?.manual ?? null;
   const mechanicalSummary: CategorySummary | null = taskData?.mechanical ?? null;
 
-  const handleSaveSummary = async (newSummary: GeneralSummary) => {
+  const handleSaveSummary = async (newSummary: IndicadoresDto) => {
     setIsLoading(true);
-    setError(null);
-
     try {
-      // Determinar si es un reporte de cuartel o de variedad
-      const endpoint = report.esVariedad && report.variedadId
-        ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/indicadores`
-        : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/indicadores`;
-
-      // Crear el objeto de datos que se enviará al backend
-      const indicadoresData = {
-        estructura: newSummary.structure,
-        totalProductivo: newSummary.productiveTotal,
-        jornalesNoProductivos: newSummary.nonProductiveWorkdays,
-        jornalesPagados: newSummary.totalPaidWorkdays,
-        rendimiento: newSummary.performance,
-        quintalPorJornal: newSummary.quintalPorJornal
-      };
-
-      // Enviar los datos al backend
-      const response = await axios.put(endpoint, indicadoresData);
-
-      if (response.data) {
-        // Actualizar el estado local con los nuevos datos
+      const response = await reportService.updateIndicadores(report,newSummary);
+      if (response) {
         setGeneralSummary(newSummary);
-
-        // Mostrar mensaje de éxito
-        setToast({
-          type: 'success',
-          message: 'Indicadores actualizados correctamente'
-        });
+        successToast('Indicadores actualizados correctamente');
       }
-    } catch (err) {
-      console.error('Error al guardar los indicadores:', err);
-
-      // Manejar diferentes tipos de errores
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 404) {
-          setError('No se encontró el reporte para actualizar');
-        } else if (err.response?.status === 400) {
-          setError('Datos inválidos. Por favor verifique los valores ingresados');
-        } else {
-          setError(err.response?.data?.message || 'Error al guardar los indicadores');
-        }
-      } else {
-        setError('Error al conectar con el servidor');
-      }
-
-      setToast({
-        type: 'error',
-        message: 'Error al guardar los indicadores'
-      });
+    } catch {
+      errorToast('Error al guardar los indicadores');
     } finally {
       setIsLoading(false);
     }
@@ -288,7 +167,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     );
   };
 
-  const renderGeneralSummary = (summary: GeneralSummary) => {
+  const renderGeneralSummary = (summary: IndicadoresDto) => {
     const summaryFields: SummaryFields[] = [
       // ...(!report.esVariedad ? [
       //   { key: 'structure', label: 'Estructura', suffix: 'jornales' } as SummaryFields,
@@ -296,7 +175,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
       //   { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' } as SummaryFields,
       //   { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' } as SummaryFields
       // ] : []),
-      { key: 'performance', label: 'Rendimiento', suffix: 'qq/ha' },
+      { key: 'rendimiento', label: 'Rendimiento', suffix: 'qq/ha' },
       { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
     ];
 

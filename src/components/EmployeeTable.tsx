@@ -1,41 +1,34 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 import TableShimmer from './TableShimmer';
-import axios from 'axios';
 import EmployeeModal from './EmployeeModal';
-import Employee from '../model/Employee';
-import ApiEmployee from '../model/ApiEmployee';
-import ToastProps from '../model/ToastProps';
+import {Employee} from '../model/Employee';
+import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Toast from './Toast';
-
+import { apiCall } from '../utils/apiUtil';
+import { employeeService } from '../services/employeeService';
 
 const EmployeeTable = () => {
-  const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | undefined>();
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [toast, setToast] = React.useState<ToastProps | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastProps | null>(null);
 
-
-  // Cargar empleados desde el backend
-  const fetchEmployees = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get<ApiEmployee[]>('/api/empleados');
-      setEmployees(response.data);
-    } catch (err) {
-      console.error('Error al cargar empleados:', err);
-      setError('No se pudieron cargar los empleados. Por favor, intente de nuevo.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    apiCall({
+      setLoading: setIsLoading,
+      setError: setError,
+      onSuccess: setEmployees,
+      serverCall: employeeService.getAll(),
+      errorMessage: 'No se pudieron cargar los empleados. Por favor, intente de nuevo.'
+    })
+  };
 
   const handleOpenModal = (employee?: Employee) => {
     setSelectedEmployee(employee);
@@ -43,94 +36,55 @@ const EmployeeTable = () => {
   };
 
   const handleSaveEmployee = async (employeeData: Employee): Promise<void> => {
-    setIsLoading(true);
-    try {
-      if (selectedEmployee?.id) {
-        // Actualizar empleado existente
-        const response = await axios.put<ApiEmployee>(`/api/empleados/${selectedEmployee.id}`, {
-          nombre: employeeData.nombre,
-          dni: employeeData.dni
-        });
-        
-        // Transformar la respuesta y actualizar el estado
-        const updatedEmployee = {
-          id: response.data.id,
-          nombre: response.data.nombre,
-          dni: response.data.dni
-        };
-        
-        setEmployees(employees.map(emp => 
-          emp.id === selectedEmployee.id ? updatedEmployee : emp
-        ));
-        
-        // Mostrar mensaje de éxito para actualización
-        setToast({
-          type: 'success',
-          message: 'Empleado actualizado correctamente'
-        });
-      } else {
-        // Crear nuevo empleado
-        const response = await axios.post<ApiEmployee>('/api/empleados', {
-          nombre: employeeData.nombre,
-          dni: employeeData.dni
-        });
-        
-        // Transformar la respuesta y actualizar el estado
-        const newEmployee = {
-          id: response.data.id,
-          nombre: response.data.nombre,
-          dni: response.data.dni
-        };
-        
-        setEmployees([...employees, newEmployee]);
-        
-        // Mostrar mensaje de éxito para creación
-        setToast({
-          type: 'success',
-          message: 'Empleado creado correctamente'
-        });
-      }
-      
-      // Cerrar el modal si la operación fue exitosa
-      setIsModalOpen(false);
-      setSelectedEmployee(undefined);
-      
-    } catch (error) {
-      console.error('Error al guardar empleado:', error);
-      // Propagamos el error para que lo maneje el modal
-      throw error;
-    } finally {
-      setIsLoading(false);
+    if (selectedEmployee?.id) {
+      apiCall({
+        setLoading: setIsLoading,
+        setError: (err) => { throw err; },
+        serverCall: employeeService.update(selectedEmployee.id, employeeData),
+        onSuccess: (data) => {
+          setEmployees(employees.map(emp => emp.id === selectedEmployee.id ? data : emp));
+          setToast(successToast('Empleado actualizado correctamente'));
+          setIsModalOpen(false);
+          setSelectedEmployee(undefined);
+        },
+      });
+    } else {
+      apiCall({
+        setLoading: setIsLoading,
+        setError: (err) => { throw err; },
+        serverCall: employeeService.create(employeeData),
+        onSuccess: (data) => {
+          setEmployees([...employees, data]);
+          setToast(successToast('Empleado creado correctamente'));
+          setIsModalOpen(false);
+          setSelectedEmployee(undefined);
+        },
+      });
     }
   };
 
   const handleDeleteEmployee = async (id: number) => {
     if (confirm('¿Está seguro de que desea eliminar este empleado?')) {
-      setIsLoading(true);
-      try {
-        await axios.delete(`/api/empleados/${id}`);
-        setEmployees(employees.filter(emp => emp.id !== id));
-        
-        // Mostrar mensaje de éxito para eliminación
-        setToast({
-          type: 'success',
-          message: 'Empleado eliminado correctamente'
-        });
-      } catch (err) {
-        console.error('Error al eliminar empleado:', err);
-        setToast({
-          type: 'error',
-          message: 'No se pudo eliminar el empleado'
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      apiCall({
+        setLoading: setIsLoading,
+        setError: setErrorToast,
+        serverCall: employeeService.delete(id),
+        errorMessage: 'No se pudo eliminar el empleado',
+        onSuccess: () => {
+          setEmployees(employees.filter(emp => emp.id !== id));
+          setToast(successToast('Empleado eliminado correctamente'));
+        },
+      });
     }
   };
 
+  const setErrorToast = (error: string | null) => {
+    setToast(errorToast(error ?? ''));
+  }
+
   return (
     <div className="p-6">
-       {toast && (
+      {toast && (
         <Toast
           type={toast.type}
           message={toast.message}
@@ -139,7 +93,7 @@ const EmployeeTable = () => {
       )}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">Empleados</h2>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           disabled={isLoading}
@@ -152,7 +106,7 @@ const EmployeeTable = () => {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
-          <button 
+          <button
             onClick={fetchEmployees}
             className="ml-2 text-red-700 font-semibold hover:text-red-800"
           >
@@ -193,14 +147,14 @@ const EmployeeTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap">{employee.dni}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-3">
-                        <button 
+                        <button
                           onClick={() => handleOpenModal(employee)}
                           className="text-blue-600 hover:text-blue-800"
                           disabled={isLoading}
                         >
                           <Edit className="h-5 w-5" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteEmployee(employee.id!)}
                           className="text-red-600 hover:text-red-800"
                           disabled={isLoading}
@@ -217,7 +171,7 @@ const EmployeeTable = () => {
         </div>
       )}
 
-<EmployeeModal
+      <EmployeeModal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);

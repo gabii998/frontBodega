@@ -1,14 +1,14 @@
 // src/utils/pdfGenerator.ts
 import jsPDF from 'jspdf';
 import DetalleVariedad from '../model/DetalleVariedad';
-import GeneralSummary from '../model/GeneralSummary';
 import CategorySummary from '../model/CategorySummary';
 import Report from '../model/Report';
+import IndicadoresDto from '../model/IndicadoresDto';
 
 interface GeneratePDFParams {
     report: Report;
     detalleVariedad: DetalleVariedad | null;
-    generalSummary: GeneralSummary;
+    generalSummary: IndicadoresDto;
     manualSummary: CategorySummary | null;
     mechanicalSummary: CategorySummary | null;
 }
@@ -170,7 +170,7 @@ export const generateReportPDF = ({
     //     addText(`Total Jornales Pagados: ${generalSummary.totalPaidWorkdays} jornales`);
     // }
 
-    addText(`Rendimiento: ${generalSummary.performance} qq/ha`,11,true);
+    addText(`Rendimiento: ${generalSummary.rendimiento} qq/ha`,11,true);
     addText(`Quintales por Jornal: ${generalSummary.quintalPorJornal.toFixed(2)} qq/Jor`,11,true);
 
     // Pie de página
