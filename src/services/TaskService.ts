@@ -8,18 +8,12 @@ export const taskService = {
   },
 
   async create(task: Omit<Task, 'id'>): Promise<Task> {
-    const response = await axios.post<Task>('/api/tareas', {
-      nombre: task.nombre,
-      tipo: task.tipo
-    });
+    const response = await axios.post<Task>('/api/tareas', task);
     return response.data;
   },
 
   async update(id: number, task: Omit<Task, 'id'>): Promise<Task> {
-    const response = await axios.put<Task>(`/api/tareas/${id}`, {
-      nombre: task.nombre,
-      tipo: task.tipo
-    });
+    const response = await axios.put<Task>(`/api/tareas/${id}`, task);
     return response.data;
   },
 

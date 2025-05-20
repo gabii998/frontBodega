@@ -6,7 +6,7 @@ export const workdayService = {
     const response = await axios.get<Workday[]>(`/api/jornales/${quarterId}`);
     return response.data.map(workday => ({
       ...workday,
-      fecha: workday.fecha.split('T')[0] // Formato de fecha
+      fecha: workday.fecha.split('T')[0] 
     }));
   },
 

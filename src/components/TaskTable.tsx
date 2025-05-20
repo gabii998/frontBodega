@@ -15,7 +15,10 @@ const TaskTable = () => {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastProps | null>(null);
 
-  // Cargar tareas desde el backend
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
   const fetchTasks = async () => {
     setIsLoading(true);
     setError(null);
@@ -29,15 +32,11 @@ const TaskTable = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
   const handleSaveTask = async (task: Omit<Task, 'id'>) => {
     setIsLoading(true);
     try {
       if (selectedTask) {
-        const response = await taskService.update(selectedTask.id,task);
+        const response = await taskService.update(selectedTask.id, task);
         setTasks(tasks.map(t => t.id === selectedTask.id ? response : t));
         successToast('Tarea actualizada correctamente');
       } else {
@@ -47,7 +46,7 @@ const TaskTable = () => {
       }
       setIsModalOpen(false);
       setSelectedTask(null);
-      
+
     } catch {
       errorToast('Error al guardar la tarea');
     } finally {
@@ -92,7 +91,6 @@ const TaskTable = () => {
 
   return (
     <div className="p-6">
-      {/* Toast notification */}
       {toast && (
         <Toast
           type={toast.type}
@@ -100,10 +98,10 @@ const TaskTable = () => {
           onClose={() => setToast(null)}
         />
       )}
-      
+
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">Tareas</h2>
-        <button 
+        <button
           onClick={() => {
             setSelectedTask(null);
             setIsModalOpen(true);
@@ -119,7 +117,7 @@ const TaskTable = () => {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
-          <button 
+          <button
             onClick={fetchTasks}
             className="ml-2 text-red-700 font-semibold hover:text-red-800"
           >
@@ -170,7 +168,7 @@ const TaskTable = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-3">
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedTask(task);
                             setIsModalOpen(true);
@@ -180,7 +178,7 @@ const TaskTable = () => {
                         >
                           <Edit className="h-5 w-5" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteTask(task.id)}
                           className="text-red-600 hover:text-red-800"
                           disabled={isLoading}

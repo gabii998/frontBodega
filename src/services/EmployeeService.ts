@@ -9,18 +9,12 @@ export const employeeService = {
   },
 
   async create(employee: Omit<Employee, 'id'>): Promise<Employee> {
-    const response = await axios.post<ApiEmployee>('/api/empleados', {
-      nombre: employee.nombre,
-      dni: employee.dni
-    });
+    const response = await axios.post<ApiEmployee>('/api/empleados',employee);
     return response.data;
   },
 
   async update(id: number, employee: Omit<Employee, 'id'>): Promise<Employee> {
-    const response = await axios.put<ApiEmployee>(`/api/empleados/${id}`, {
-      nombre: employee.nombre,
-      dni: employee.dni
-    });
+    const response = await axios.put<ApiEmployee>(`/api/empleados/${id}`,employee);
     return response.data;
   },
 

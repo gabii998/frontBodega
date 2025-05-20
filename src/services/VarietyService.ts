@@ -1,4 +1,3 @@
-// src/services/varietyService.ts
 import axios from 'axios';
 import Variety from '../model/Variety';
 
