@@ -84,7 +84,6 @@ const QuarterTable = () => {
     }
   };
 
-  // Función para eliminar un cuartel
   const handleDeleteQuarter = async (id: number) => {
     if (confirm('¿Está seguro de que desea eliminar este cuartel?')) {
       setIsLoading(true);
@@ -110,7 +109,6 @@ const QuarterTable = () => {
 
   return (
     <div className="p-6">
-      {/* Toast notification */}
       {toast && (
         <Toast
           type={toast.type}

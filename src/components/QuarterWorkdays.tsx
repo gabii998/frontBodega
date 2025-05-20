@@ -5,15 +5,14 @@ import WorkdayModal from './WorkdayModal';
 import { useParams, useNavigate } from 'react-router-dom';
 import Toast from './Toast';
 import Workday from '../model/Workday';
-import {Quarter} from '../model/Quarter';
-import {Employee} from '../model/Employee';
+import { Quarter } from '../model/Quarter';
+import { Employee } from '../model/Employee';
 import Task from '../model/Task';
 import { quarterService } from '../services/QuarterService';
 import { employeeService } from '../services/employeeService';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import { taskService } from '../services/TaskService';
 import { workdayService } from '../services/WorkdayService';
-
 
 const mapApiWorkday = (apiWorkday: Workday): Workday => {
   const fechaFormateada = apiWorkday.fecha ? apiWorkday.fecha.split('T')[0] : '';
@@ -35,64 +34,65 @@ const QuarterWorkdays = () => {
   const [toast, setToast] = useState<ToastProps | null>(null);
 
   useEffect(() => {
-    const fetchQuarter = async () => {
-      try {
-        setIsLoading(true);
-        const response = await quarterService.get(id ?? '');
-        setQuarter(response);
-      } catch {
-        setError('No se pudo cargar la información del cuartel');
-      }
-    };
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
-    const fetchEmployees = async () => {
-      try {
-        const response = await employeeService.getAll();
-        setEmployees(response);
-      } catch {
-        errorToast('Error al obtener los empleados.')
-      }
-    };
+  const fetchQuarter = async () => {
+    try {
+      setIsLoading(true);
+      const response = await quarterService.get(id ?? '');
+      setQuarter(response);
+    } catch {
+      setError('No se pudo cargar la información del cuartel');
+    }
+  };
 
-    const fetchTasks = async () => {
-      try {
-        const response = await taskService.getAll();
-        setTasks(response);
-      } catch {
-        errorToast('Error al cargar tareas.');
-      }
-    };
+  const fetchEmployees = async () => {
+    try {
+      const response = await employeeService.getAll();
+      setEmployees(response);
+    } catch {
+      errorToast('Error al obtener los empleados.')
+    }
+  };
 
-    const fetchWorkdays = async () => {
+  const fetchTasks = async () => {
+    try {
+      const response = await taskService.getAll();
+      setTasks(response);
+    } catch {
+      errorToast('Error al cargar tareas.');
+    }
+  };
+
+  const fetchWorkdays = async () => {
+    try {
+      const response = await workdayService.getByQuarter(id ?? '');
+      setWorkdays(response);
+    } catch {
+      setError('No se pudieron cargar los jornales de este cuartel');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadData = async () => {
+    if (id) {
       try {
-        const response = await workdayService.getByQuarter(id ?? '');
-        setWorkdays(response);
-      } catch {
-        setError('No se pudieron cargar los jornales de este cuartel');
+        await Promise.all([
+          fetchQuarter(),
+          fetchEmployees(),
+          fetchTasks()
+        ]);
+        await fetchWorkdays();
+      } catch (error) {
+        console.error("Error cargando datos:", error);
       } finally {
         setIsLoading(false);
       }
-    };
-
-    const loadData = async () => {
-      if (id) {
-        try {
-          await Promise.all([
-            fetchQuarter(),
-            fetchEmployees(),
-            fetchTasks()
-          ]);
-          await fetchWorkdays();
-        } catch (error) {
-          console.error("Error cargando datos:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadData();
-  }, [id]);
+    }
+  };
 
   const handleBack = () => {
     navigate('/quarters');
@@ -252,16 +252,10 @@ const QuarterWorkdays = () => {
                 <tr key={workday.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {(() => {
-                      // Mostrar solo la fecha, evitando cualquier conversión de zona horaria
-                      // Dividir por 'T' para obtener solo la parte de fecha si es una fecha ISO
                       const fechaParte = workday.fecha.includes('T')
                         ? workday.fecha.split('T')[0]
                         : workday.fecha;
-
-                      // Dividir la fecha en componentes
                       const [anio, mes, dia] = fechaParte.split('-');
-
-                      // Formatear como DD/MM/YYYY
                       return `${dia}/${mes}/${anio}`;
                     })()}
                   </td>
@@ -317,8 +311,6 @@ const QuarterWorkdays = () => {
           </div>
         )}
       </div>
-
-      {/* Modal para añadir/editar jornales */}
       {isModalOpen && quarter && (
         <WorkdayModal
           isOpen={isModalOpen}

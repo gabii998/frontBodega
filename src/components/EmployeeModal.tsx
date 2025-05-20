@@ -23,24 +23,17 @@ const EmployeeModal = ({
   useEffect(() => {
     if (isOpen) {
       if (employee) {
-        setFormData({
-          id: employee.id,
-          nombre: employee.nombre,
-          dni: employee.dni
-        });
+        setFormData(employee);
       } else {
         setFormData(createEmployee);
       }
       setValidationErrors(createEmployee);
       setServerError(null);
       setAnimationClass("modalIn");
-
-      // Bloquear desplazamiento del body cuando el modal está abierto
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
-      // Restaurar desplazamiento cuando se desmonta el componente
       document.body.style.overflow = 'auto';
     };
   }, [employee, isOpen]);
@@ -75,7 +68,6 @@ const EmployeeModal = ({
   const handleAnimationEnd = () => {
     if (animationClass === "modalOut") {
       onClose();
-      // Restaurar desplazamiento cuando se cierra el modal
       document.body.style.overflow = 'auto';
     }
   };
@@ -94,17 +86,13 @@ const EmployeeModal = ({
     }
   };
 
-  // Usar createPortal para renderizar el modal directamente en el body
   return createPortal(
     <div className="modal-overlay">
-      {/* Overlay de fondo - cubrir toda la pantalla */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-50"
         onClick={handleClose}
         style={{ opacity: animationClass === "modalOut" ? 0 : 1, transition: "opacity 0.3s" }}
       ></div>
-
-      {/* Contenedor centrado del modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div
           className={`bg-white rounded-lg w-full max-w-md p-6 relative shadow-xl ${animationClass}`}
@@ -191,7 +179,7 @@ const EmployeeModal = ({
         </div>
       </div>
     </div>,
-    document.body // Renderiza el modal directamente en el body para evitar problemas de posicionamiento
+    document.body
   );
 };
 

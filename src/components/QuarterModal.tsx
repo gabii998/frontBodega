@@ -24,26 +24,21 @@ const QuarterModal = ({
   const [addingVariety, setAddingVariety] = useState(false);
   const [animationClass, setAnimationClass] = useState("modalIn");
 
-  // Inicializar el formulario con los datos del cuartel si está editando
   useEffect(() => {
     if (isOpen) {
       if (quarter) {
         setFormData(quarter);
       } else {
-        // Reiniciar el formulario para un nuevo cuartel
         setFormData(createQuarterBase);
       }
       setErrors({});
       setShowNewVarietyForm(false);
       setNewVarietyName('');
       setAnimationClass("modalIn");
-      
-      // Bloquear desplazamiento del body cuando el modal está abierto
       document.body.style.overflow = 'hidden';
     }
     
     return () => {
-      // Restaurar desplazamiento cuando se desmonta el componente
       document.body.style.overflow = 'auto';
     };
   }, [quarter, isOpen]);
@@ -51,7 +46,6 @@ const QuarterModal = ({
   if (!isOpen) return null;
 
   const handleAddVariety = (variedadId: number) => {
-    // Verificar que la variedad no esté ya seleccionada
     const existingVariety = formData.variedades.find(v => v.id === variedadId);
     if (existingVariety) {
       setErrors({
@@ -130,8 +124,6 @@ const QuarterModal = ({
         ...formData,
         variedades: [...formData.variedades, response]
       });
-
-      // Limpiar el formulario de nueva variedad
       setNewVarietyName('');
       setShowNewVarietyForm(false);
       setErrors({
@@ -182,7 +174,6 @@ const QuarterModal = ({
   const handleAnimationEnd = () => {
     if (animationClass === "modalOut") {
       onClose();
-      // Restaurar desplazamiento cuando se cierra el modal
       document.body.style.overflow = 'auto';
     }
   };
@@ -195,12 +186,10 @@ const QuarterModal = ({
     }
   };
 
-  // Calcular la superficie total de todas las variedades
   const calculateTotalArea = () => {
     return formData.variedades.reduce((sum, v) => sum + (v.superficie || 0), 0);
   };
 
-  // Obtener variedades no utilizadas
   const getUnusedVarieties = () => {
     const usedIds = new Set(formData.variedades.map(v => v.id));
     return availableVarieties.filter(v => !usedIds.has(v.id));
@@ -208,14 +197,12 @@ const QuarterModal = ({
 
   return createPortal(
     <div className="modal-overlay">
-      {/* Overlay de fondo - cubrir toda la pantalla */}
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 z-50" 
         onClick={handleClose}
         style={{ opacity: animationClass === "modalOut" ? 0 : 1, transition: "opacity 0.3s" }}
       ></div>
       
-      {/* Contenedor del modal */}
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div 
           className={`bg-white rounded-lg w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto shadow-xl ${animationClass}`}
@@ -235,7 +222,6 @@ const QuarterModal = ({
             {quarter ? 'Editar Cuartel' : 'Nuevo Cuartel'}
           </h2>
 
-          {/* Mostrar la finca activa */}
           {activeFarm && (
             <div className="flex items-center mb-4 bg-green-50 p-3 rounded-lg border border-green-200">
               <MapPin className="h-5 w-5 text-green-600 mr-2" />
@@ -406,7 +392,6 @@ const QuarterModal = ({
                   </table>
                 </div>
 
-                {/* Agregar variedades existentes */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-sm font-medium text-gray-700">Agregar variedad existente</h3>
@@ -438,7 +423,6 @@ const QuarterModal = ({
                   </div>
                 </div>
 
-                {/* Crear nueva variedad - se muestra solo cuando showNewVarietyForm es true */}
                 {showNewVarietyForm && (
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
                     <h3 className="text-sm font-medium text-blue-700 mb-2">Crear nueva variedad</h3>
