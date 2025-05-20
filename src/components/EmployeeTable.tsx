@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import EmployeeModal from './EmployeeModal';
-import {Employee} from '../model/Employee';
+import { Employee } from '../model/Employee';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Toast from './Toast';
 import { apiCall } from '../utils/apiUtil';
 import { employeeService } from '../services/employeeService';
+import Table from '../common/Table';
 
 const EmployeeTable = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -82,6 +83,35 @@ const EmployeeTable = () => {
     setToast(errorToast(error ?? ''));
   }
 
+  const tableContent = () => {
+    return (
+      employees.map((employee) => (
+        <tr key={employee.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 whitespace-nowrap">{employee.nombre}</td>
+          <td className="px-6 py-4 whitespace-nowrap">{employee.dni}</td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="flex space-x-3">
+              <button
+                onClick={() => handleOpenModal(employee)}
+                className="text-blue-600 hover:text-blue-800"
+                disabled={isLoading}
+              >
+                <Edit className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => handleDeleteEmployee(employee.id!)}
+                className="text-red-600 hover:text-red-800"
+                disabled={isLoading}
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))
+    )
+  }
+
   return (
     <div className="p-6">
       {toast && (
@@ -119,55 +149,12 @@ const EmployeeTable = () => {
         <TableShimmer columns={[40, 40, 20]} rows={4} />
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nombre
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  DNI
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {employees.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
-                    No hay empleados registrados
-                  </td>
-                </tr>
-              ) : (
-                employees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{employee.nombre}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{employee.dni}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleOpenModal(employee)}
-                          className="text-blue-600 hover:text-blue-800"
-                          disabled={isLoading}
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEmployee(employee.id!)}
-                          className="text-red-600 hover:text-red-800"
-                          disabled={isLoading}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <Table
+            header={["Nombre", "DNI", "Acciones"]}
+            emptyMessage='No hay empleados registrados'
+            isEmpty={employees.length === 0}
+            content={tableContent}
+          />
         </div>
       )}
 
