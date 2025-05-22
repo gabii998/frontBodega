@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import EmployeeModal from './EmployeeModal';
@@ -8,6 +8,8 @@ import Toast from './Toast';
 import { apiCall } from '../utils/apiUtil';
 import { employeeService } from '../services/employeeService';
 import Table from '../common/Table';
+import Title from '../common/Title';
+import ErrorBanner from '../common/ErrorBanner';
 
 const EmployeeTable = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -36,32 +38,22 @@ const EmployeeTable = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveEmployee = async (employeeData: Employee): Promise<void> => {
-    if (selectedEmployee?.id) {
-      apiCall({
+  const onEmployeeSaved = (data: Employee, isEdit: boolean) => {
+    setEmployees(isEdit ? employees.map(emp => emp.id === selectedEmployee?.id ? data : emp) : [...employees, data]);
+    setToast(successToast('Empleado'+(isEdit ? 'actualizado' : 'creado')+'correctamente'));
+    setIsModalOpen(false);
+    setSelectedEmployee(undefined);
+  }
+
+  const handleSaveEmployee = async (employeeData: Employee) => {
+    const isEdit = Boolean(selectedEmployee?.id);
+    const call = isEdit ? employeeService.update(selectedEmployee?.id ?? -1, employeeData) : employeeService.create(employeeData);
+    apiCall({
         setLoading: setIsLoading,
-        setError: (err) => { throw err; },
-        serverCall: employeeService.update(selectedEmployee.id, employeeData),
-        onSuccess: (data) => {
-          setEmployees(employees.map(emp => emp.id === selectedEmployee.id ? data : emp));
-          setToast(successToast('Empleado actualizado correctamente'));
-          setIsModalOpen(false);
-          setSelectedEmployee(undefined);
-        },
+        setError: setError,
+        serverCall: call,
+        onSuccess: (data) => onEmployeeSaved(data,isEdit),
       });
-    } else {
-      apiCall({
-        setLoading: setIsLoading,
-        setError: (err) => { throw err; },
-        serverCall: employeeService.create(employeeData),
-        onSuccess: (data) => {
-          setEmployees([...employees, data]);
-          setToast(successToast('Empleado creado correctamente'));
-          setIsModalOpen(false);
-          setSelectedEmployee(undefined);
-        },
-      });
-    }
   };
 
   const handleDeleteEmployee = async (id: number) => {
@@ -83,33 +75,27 @@ const EmployeeTable = () => {
     setToast(errorToast(error ?? ''));
   }
 
-  const tableContent = () => {
-    return (
-      employees.map((employee) => (
-        <tr key={employee.id} className="hover:bg-gray-50">
-          <td className="px-6 py-4 whitespace-nowrap">{employee.nombre}</td>
-          <td className="px-6 py-4 whitespace-nowrap">{employee.dni}</td>
-          <td className="px-6 py-4 whitespace-nowrap">
-            <div className="flex space-x-3">
-              <button
-                onClick={() => handleOpenModal(employee)}
-                className="text-blue-600 hover:text-blue-800"
-                disabled={isLoading}
-              >
-                <Edit className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => handleDeleteEmployee(employee.id!)}
-                className="text-red-600 hover:text-red-800"
-                disabled={isLoading}
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))
-    )
+  const tableContent = (employee: Employee,): ReactNode[] => {
+    return [
+      employee.nombre,
+      employee.dni,
+      <div className="flex space-x-3">
+        <button
+          onClick={() => handleOpenModal(employee)}
+          className="text-blue-600 hover:text-blue-800"
+          disabled={isLoading}
+        >
+          <Edit className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => handleDeleteEmployee(employee.id!)}
+          className="text-red-600 hover:text-red-800"
+          disabled={isLoading}
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
+      </div>
+    ];
   }
 
   return (
@@ -121,11 +107,11 @@ const EmployeeTable = () => {
           onClose={() => setToast(null)}
         />
       )}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Empleados</h2>
+      <div className="content">
+        <Title title="Empleados" />
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="toolbar-button"
           disabled={isLoading}
         >
           <UserPlus className="h-5 w-5 mr-2" />
@@ -134,15 +120,7 @@ const EmployeeTable = () => {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-          <button
-            onClick={fetchEmployees}
-            className="ml-2 text-red-700 font-semibold hover:text-red-800"
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorBanner error={error} retry={fetchEmployees} />
       )}
 
       {isLoading ? (
@@ -152,7 +130,7 @@ const EmployeeTable = () => {
           <Table
             header={["Nombre", "DNI", "Acciones"]}
             emptyMessage='No hay empleados registrados'
-            isEmpty={employees.length === 0}
+            data={employees}
             content={tableContent}
           />
         </div>

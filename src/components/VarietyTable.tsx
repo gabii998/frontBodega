@@ -6,6 +6,9 @@ import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Variety from '../model/Variety';
 import VarietyModal from './VarietyModal';
 import { varietyService } from '../services/VarietyService';
+import Table from '../common/Table';
+import Title from '../common/Title';
+import ErrorBanner from '../common/ErrorBanner';
 
 const VarietyTable = () => {
   const [varieties, setVarieties] = useState<Variety[]>([]);
@@ -36,8 +39,8 @@ const VarietyTable = () => {
     setIsLoading(true);
     try {
       if (selectedVariety?.id) {
-        const response = await varietyService.update(selectedVariety.id,varietyData.nombre)
-        setVarieties(varieties.map(v => 
+        const response = await varietyService.update(selectedVariety.id, varietyData.nombre)
+        setVarieties(varieties.map(v =>
           v.id === selectedVariety.id ? response : v
         ));
         successToast('Variedad actualizada correctamente');
@@ -49,7 +52,7 @@ const VarietyTable = () => {
       }
       setIsModalOpen(false);
       setSelectedVariety(null);
-      
+
     } catch {
       errorToast('Error al guardar la variedad');
     } finally {
@@ -63,7 +66,7 @@ const VarietyTable = () => {
       try {
         await varietyService.delete(id);
         setVarieties(varieties.filter(v => v.id !== id));
-        
+
         // Mostrar mensaje de éxito para eliminación
         setToast({
           type: 'success',
@@ -81,6 +84,34 @@ const VarietyTable = () => {
     }
   };
 
+  const tableContentBody = (variety: Variety,) => {
+    return [
+      <div className="flex items-center">
+        <Leaf className="h-5 w-5 text-green-500 mr-2" />
+        <span>{variety.nombre}</span>
+      </div>,
+      <div className="flex space-x-3">
+        <button
+          onClick={() => {
+            setSelectedVariety(variety);
+            setIsModalOpen(true);
+          }}
+          className="text-blue-600 hover:text-blue-800"
+          disabled={isLoading}
+        >
+          <Edit className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => handleDeleteVariety(variety.id)}
+          className="text-red-600 hover:text-red-800"
+          disabled={isLoading}
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
+      </div>
+    ];
+  }
+
   return (
     <div className="p-6">
       {toast && (
@@ -90,15 +121,15 @@ const VarietyTable = () => {
           onClose={() => setToast(null)}
         />
       )}
-      
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Variedades de Uva</h2>
-        <button 
+
+      <div className="content">
+        <Title title='Variedades de Uva'/>
+        <button
           onClick={() => {
             setSelectedVariety(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="toolbar-button"
           disabled={isLoading}
         >
           <Plus className="h-5 w-5 mr-2" />
@@ -107,74 +138,19 @@ const VarietyTable = () => {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-          <button 
-            onClick={fetchVarieties}
-            className="ml-2 text-red-700 font-semibold hover:text-red-800"
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorBanner error={error} retry={fetchVarieties} />
       )}
 
       {isLoading ? (
         <TableShimmer columns={[70, 30]} rows={4} />
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nombre
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {varieties.length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="px-6 py-4 text-center text-gray-500">
-                    No hay variedades registradas
-                  </td>
-                </tr>
-              ) : (
-                varieties.map((variety) => (
-                  <tr key={variety.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Leaf className="h-5 w-5 text-green-500 mr-2" />
-                        <span>{variety.nombre}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-3">
-                        <button 
-                          onClick={() => {
-                            setSelectedVariety(variety);
-                            setIsModalOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800"
-                          disabled={isLoading}
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteVariety(variety.id)}
-                          className="text-red-600 hover:text-red-800"
-                          disabled={isLoading}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <Table
+            header={["Nombre", "Acciones"]}
+            emptyMessage='No hay variedades registradas'
+            data={varieties}
+            content={tableContentBody}
+          />
         </div>
       )}
 

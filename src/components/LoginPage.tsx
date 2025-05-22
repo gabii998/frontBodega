@@ -3,6 +3,7 @@ import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../utils/apiUtil';
+import ErrorBanner from '../common/ErrorBanner';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -37,9 +38,7 @@ const LoginPage = () => {
         </h2>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
+          <ErrorBanner error={error}/>
         )}
         
         <form onSubmit={handleSubmit}>

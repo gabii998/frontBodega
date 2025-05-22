@@ -13,6 +13,7 @@ import { employeeService } from '../services/employeeService';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import { taskService } from '../services/TaskService';
 import { workdayService } from '../services/WorkdayService';
+import Title from '../common/Title';
 
 const mapApiWorkday = (apiWorkday: Workday): Workday => {
   const fechaFormateada = apiWorkday.fecha ? apiWorkday.fecha.split('T')[0] : '';
@@ -146,9 +147,7 @@ const QuarterWorkdays = () => {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <h2 className="text-2xl font-semibold text-gray-800">
-            Cargando...
-          </h2>
+          <Title title='Cargando...'/>
         </div>
         <div className="bg-white rounded-lg shadow p-6 animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
@@ -168,15 +167,17 @@ const QuarterWorkdays = () => {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <h2 className="text-2xl font-semibold text-gray-800">
-            Error
-          </h2>
+          <Title title='Error'/>
         </div>
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error || 'No se pudo encontrar el cuartel solicitado'}
         </div>
       </div>
     );
+  }
+
+  const getTitle = () => {
+    return `Jornales - ${quarter.nombre}`
   }
 
   return (
@@ -198,9 +199,7 @@ const QuarterWorkdays = () => {
             <ArrowLeft className="h-6 w-6" />
           </button>
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800">
-              Jornales - {quarter.nombre}
-            </h2>
+            <Title title={getTitle()}/>
             {quarter.superficieTotal && (
               <p className="text-sm text-gray-500">
                 Superficie: {quarter.superficieTotal} hectáreas
@@ -213,7 +212,7 @@ const QuarterWorkdays = () => {
             setSelectedWorkday(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="toolbar-button"
         >
           <Plus className="h-5 w-5 mr-2" />
           Nuevo Jornal

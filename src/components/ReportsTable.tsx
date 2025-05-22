@@ -7,6 +7,8 @@ import { useFarm } from '../context/FarmContext';
 import ToastProps, { errorToast } from '../model/ToastProps';
 import { reportService } from '../services/reportService';
 import ReporteCuartel from '../model/ReporteCuartel';
+import Title from '../common/Title';
+import ErrorBanner from '../common/ErrorBanner';
 
 const AnimatedVarietyRows = ({
   varieties,
@@ -144,7 +146,7 @@ const ReportsTable = () => {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Reportes</h2>
+          <Title title='Reportes'/>
         </div>
         <TableShimmer columns={[30, 20, 15, 15, 20]} rows={3} />
       </div>
@@ -193,9 +195,8 @@ const ReportsTable = () => {
         />
       )}
 
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Reportes</h2>
-
+      <div className="content">
+        <Title title='Reportes'/>
         <div className="flex items-center">
           <select
             value={anioSeleccionado}
@@ -223,15 +224,7 @@ const ReportsTable = () => {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-          <button
-            onClick={fetchReports}
-            className="ml-2 text-red-700 font-semibold hover:text-red-800"
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorBanner error={error} retry={fetchReports} />
       )}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">

@@ -14,28 +14,29 @@ export const apiCall = async <T>({
     onSuccess,
     serverCall,
     errorMessage
-}:ApiCallProps<T>) => {
-    if (setLoading != null) {
-        setLoading(true);
-    }
-    setError(null);
+}: ApiCallProps<T>) => {
+    console.log('serverCall type:', typeof serverCall);
     try {
+        if (setLoading != null) {
+            setLoading(true);
+        }
+        setError(null);
         const data = await serverCall;
-
+        console.log(data)
         onSuccess(data);
     } catch (error) {
         if (axios.isAxiosError(error)) {
             if (error.response?.data?.message) {
                 setError(error.response.data.message);
             } else {
-                if(errorMessage) {
+                if (errorMessage) {
                     setError(errorMessage);
                 }
             }
         } else if (error instanceof Error) {
             setError(error.message);
         } else {
-            if(errorMessage) {
+            if (errorMessage) {
                 setError(errorMessage);
             }
         }

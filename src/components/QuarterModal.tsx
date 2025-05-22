@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2, MapPin } from 'lucide-react';
 import QuarterModalProps from '../model/QuarterModalProps';
-import {createQuarterBase, Quarter} from '../model/Quarter';
+import { createQuarterBase, Quarter } from '../model/Quarter';
 import { useFarm } from '../context/FarmContext';
 import { createPortal } from 'react-dom';
 import { varietyService } from '../services/VarietyService';
+import Table from '../common/Table';
+import VarietyCuartel from '../model/VarietyCuartel';
 
 const QuarterModal = ({
   isOpen,
@@ -37,7 +39,7 @@ const QuarterModal = ({
       setAnimationClass("modalIn");
       document.body.style.overflow = 'hidden';
     }
-    
+
     return () => {
       document.body.style.overflow = 'auto';
     };
@@ -63,7 +65,7 @@ const QuarterModal = ({
           id: variety.id,
           nombre: variety.nombre,
           superficie: 0,
-          hileras:0
+          hileras: 0
         }]
       });
       setErrors({
@@ -80,7 +82,7 @@ const QuarterModal = ({
     });
   };
 
-  const handleVarietyChange = (id: number,superficie: number) => {
+  const handleVarietyChange = (id: number, superficie: number) => {
     setFormData({
       ...formData,
       variedades: formData.variedades.map(v =>
@@ -89,7 +91,7 @@ const QuarterModal = ({
     });
   };
 
-  const handleHilerasChange = (id: number,hileras: number) => {
+  const handleHilerasChange = (id: number, hileras: number) => {
     setFormData({
       ...formData,
       variedades: formData.variedades.map(v =>
@@ -195,16 +197,50 @@ const QuarterModal = ({
     return availableVarieties.filter(v => !usedIds.has(v.id));
   };
 
+  const tableBody = (variety:VarietyCuartel,) => {
+    return [
+      variety.nombre,
+      <input
+          type="number"
+          value={variety.superficie || ''}
+          onChange={(e) => handleVarietyChange(variety.id ?? -1, Number(e.target.value))}
+          placeholder="Superficie (ha)"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          step="0.01"
+          min="0"
+          disabled={isLoading}
+        />,
+        <input
+          type="number"
+          value={variety.hileras || ''}
+          onChange={(e) => handleHilerasChange(variety.id ?? -1, Number(e.target.value))}
+          placeholder="Hileras"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          step="1"
+          min="1"
+          disabled={isLoading}
+        />,
+        <button
+          type="button"
+          onClick={() => handleRemoveVariety(variety.id ?? -1)}
+          className="text-red-600 hover:text-red-800"
+          disabled={isLoading}
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
+    ]
+  }
+
   return createPortal(
     <div className="modal-overlay">
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50" 
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-50"
         onClick={handleClose}
         style={{ opacity: animationClass === "modalOut" ? 0 : 1, transition: "opacity 0.3s" }}
       ></div>
-      
+
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div 
+        <div
           className={`bg-white rounded-lg w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto shadow-xl ${animationClass}`}
           onClick={(e) => e.stopPropagation()}
           onAnimationEnd={handleAnimationEnd}
@@ -318,78 +354,13 @@ const QuarterModal = ({
                 {errors.varieties && (
                   <p className="mt-1 text-sm text-red-500 mb-2">{errors.varieties}</p>
                 )}
-
-                {/* Lista de variedades seleccionadas */}
                 <div className="bg-white rounded-lg border border-gray-200 mb-4">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Variedad
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Superficie (ha)
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Hileras
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {formData.variedades.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
-                            No hay variedades agregadas
-                          </td>
-                        </tr>
-                      ) : (
-                        formData.variedades.map((variety) => (
-                          <tr key={variety.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {variety.nombre}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <input
-                                type="number"
-                                value={variety.superficie || ''}
-                                onChange={(e) => handleVarietyChange(variety.id ?? -1, Number(e.target.value))}
-                                placeholder="Superficie (ha)"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                step="0.01"
-                                min="0"
-                                disabled={isLoading}
-                              />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <input
-                                type="number"
-                                value={variety.hileras || ''}
-                                onChange={(e) => handleHilerasChange(variety.id ?? -1, Number(e.target.value))}
-                                placeholder="Hileras"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                step="1"
-                                min="1"
-                                disabled={isLoading}
-                              />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveVariety(variety.id ?? -1)}
-                                className="text-red-600 hover:text-red-800"
-                                disabled={isLoading}
-                              >
-                                <Trash2 className="h-5 w-5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                  <Table
+                    header={["Variedad", "Superficie (ha)", "Hileras", "Acciones"]}
+                    data={formData.variedades}
+                    emptyMessage='No hay variedades agregadas'
+                    content={(variety,) => tableBody(variety)}
+                  />
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">

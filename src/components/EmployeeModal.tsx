@@ -3,7 +3,6 @@ import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import EmployeeModalProps from '../model/EmployeeModalProps';
 import {createEmployee, Employee} from '../model/Employee';
-import { apiCall } from '../utils/apiUtil';
 
 const EmployeeModal = ({
   isOpen,
@@ -12,10 +11,7 @@ const EmployeeModal = ({
   employee,
   isLoading = false
 }: EmployeeModalProps) => {
-  const [formData, setFormData] = useState<Employee>({
-    nombre: employee?.nombre || '',
-    dni: employee?.dni || ''
-  });
+  const [formData, setFormData] = useState<Employee>(createEmployee);
   const [validationErrors, setValidationErrors] = useState(createEmployee);
   const [serverError, setServerError] = useState<string | null>(null);
   const [animationClass, setAnimationClass] = useState("modalIn");
@@ -76,13 +72,7 @@ const EmployeeModal = ({
     e.preventDefault();
 
     if (validateForm()) {
-      apiCall<void>({
-        setError: setServerError,
-        onSuccess: handleClose,
-        serverCall: onSave(formData),
-        setLoading: null,
-        errorMessage: 'Ocurrió un error al guardar el empleado. Intente nuevamente.'
-      })
+      onSave(formData);
     }
   };
 
@@ -118,7 +108,7 @@ const EmployeeModal = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => handleSubmit(e)}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nombre Completo
