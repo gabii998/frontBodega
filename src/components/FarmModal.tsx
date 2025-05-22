@@ -76,14 +76,14 @@ const FarmModal = ({ isOpen, onClose, onSave, farm, isLoading = false }: FarmMod
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border border-gray-300"
+              className="gray-button"
               disabled={isLoading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
+              className="save-button"
               disabled={isLoading}
             >
               {isLoading ? 'Guardando...' : 'Guardar'}

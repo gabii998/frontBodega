@@ -127,7 +127,7 @@ const QuarterTable = () => {
             setSelectedQuarter(quarter);
             setIsModalOpen(true);
           }}
-          className="text-blue-600 hover:text-blue-800"
+          className="edit-button"
           disabled={isLoading}
         >
           <Edit className="h-5 w-5" />
@@ -137,7 +137,7 @@ const QuarterTable = () => {
             e.stopPropagation();
             handleDeleteQuarter(quarter.id ?? -1)
           }}
-          className="text-red-600 hover:text-red-800"
+          className="delete-button"
           disabled={isLoading}
         >
           <Trash2 className="h-5 w-5" />

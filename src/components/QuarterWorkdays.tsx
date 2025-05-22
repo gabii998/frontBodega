@@ -282,14 +282,14 @@ const QuarterWorkdays = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEditWorkday(workday)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="edit-button"
                         title="Editar jornal"
                       >
                         <Edit className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDeleteWorkday(workday.id!)}
-                        className="text-red-600 hover:text-red-800"
+                        className="delete-button"
                         title="Eliminar jornal"
                       >
                         <Trash2 className="h-5 w-5" />

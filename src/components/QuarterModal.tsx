@@ -223,7 +223,7 @@ const QuarterModal = ({
         <button
           type="button"
           onClick={() => handleRemoveVariety(variety.id ?? -1)}
-          className="text-red-600 hover:text-red-800"
+          className="delete-button"
           disabled={isLoading}
         >
           <Trash2 className="h-5 w-5" />
@@ -369,7 +369,7 @@ const QuarterModal = ({
                     <button
                       type="button"
                       onClick={() => setShowNewVarietyForm(!showNewVarietyForm)}
-                      className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                      className="text-sm edit-button flex items-center"
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Crear nueva variedad
@@ -443,14 +443,14 @@ const QuarterModal = ({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border border-gray-300"
+                  className="gray-button"
                   disabled={isLoading}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                  className="save-button"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Guardando...' : 'Guardar'}

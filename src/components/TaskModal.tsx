@@ -157,14 +157,14 @@ const TaskModal = ({ isOpen, onClose, onSave, task, isLoading = false }: TaskMod
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg border border-gray-300 transition-colors hover:bg-gray-50"
+                  className="gray-button transition-colors hover:bg-gray-50"
                   disabled={isLoading}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                  className="save-button transition-colors"
                   disabled={isLoading}
                 >
                   {isLoading ? (
