@@ -15,14 +15,12 @@ export const apiCall = async <T>({
     serverCall,
     errorMessage
 }: ApiCallProps<T>) => {
-    console.log('serverCall type:', typeof serverCall);
     try {
         if (setLoading != null) {
             setLoading(true);
         }
         setError(null);
         const data = await serverCall;
-        console.log(data)
         onSuccess(data);
     } catch (error) {
         if (axios.isAxiosError(error)) {

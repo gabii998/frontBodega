@@ -18,7 +18,6 @@ const QuarterModal = ({
   availableEmployees }: QuarterModalProps) => {
   const { activeFarm } = useFarm();
   const [formData, setFormData] = useState<Quarter>(createQuarterBase);
-
   const [loadingOptions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showNewVarietyForm, setShowNewVarietyForm] = useState(false);

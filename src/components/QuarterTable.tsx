@@ -71,17 +71,17 @@ const QuarterTable = () => {
     try {
       let response: Quarter;
       if (quarter.id) {
-        response = await quarterService.update(quarter);
+        response = await quarterService.update(quarter,activeFarm?.id ?? -1);
         setQuarters(quarters.map(q => q.id === quarter.id ? response : q));
       } else {
-        response = await quarterService.create(quarter);
+        response = await quarterService.create(quarter,activeFarm?.id ?? -1);
         setQuarters([...quarters, response]);
       }
       setIsModalOpen(false);
       setSelectedQuarter(null);
-      successToast(quarter.id ? 'Cuartel actualizado correctamente' : 'Cuartel creado correctamente')
+      setToast(successToast(quarter.id ? 'Cuartel actualizado correctamente' : 'Cuartel creado correctamente'));
     } catch {
-      errorToast(`Error al ${quarter.id ? 'actualizar' : 'crear'} el cuartel.`)
+      setToast(errorToast(`Error al ${quarter.id ? 'actualizar' : 'crear'} el cuartel.`));
     } finally {
       setIsLoading(false);
     }
@@ -93,9 +93,9 @@ const QuarterTable = () => {
       try {
         await quarterService.delete(id);
         setQuarters(quarters.filter(q => q.id !== id));
-        successToast('Cuartel eliminado correctamente')
+        setToast(successToast('Cuartel eliminado correctamente'));
       } catch {
-        errorToast('Error al eliminar el cuartel');
+        setToast(errorToast('Error al eliminar el cuartel'));
       } finally {
         setIsLoading(false);
       }

@@ -4,8 +4,8 @@ export interface Quarter {
     id?: number;
     nombre: string;
     variedades: VarietyCuartel[];
-    encargadoId?: number | null;
-    fincaId?:number | null;
+    encargadoId: number | null;
+    fincaId:number | null;
     encargadoNombre?: string | null;
     superficieTotal?: number;
     hileras?:number;
@@ -17,6 +17,7 @@ export interface Quarter {
     variedades: [],
     encargadoId: null,
     encargadoNombre: null,
+    fincaId:-1,
     superficieTotal: 0,
     sistema: 'parral',
     hileras:0
