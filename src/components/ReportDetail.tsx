@@ -38,9 +38,9 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
         manualSummary,
         mechanicalSummary
       });
-      successToast('PDF generado correctamente');
+      setToast(successToast('PDF generado correctamente'));
     } catch {
-      errorToast('Error al generar el PDF');
+      setToast(errorToast('Error al generar el PDF'));
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -53,7 +53,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
       const response = await reportService.getIndicadores(report.date, report.quarter.id, report.variedadId);
       setGeneralSummary(response);
     } catch {
-      errorToast('Error al cargar los indicadores');
+      setToast(errorToast('Error al cargar los indicadores'));
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +65,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
       const response = await reportService.getVariedadDetalle(report.date, report.quarter.id ?? 0, report.variedadId ?? 0);
       setDetalleVariedad(response);
     } catch {
-      errorToast('No se pudieron cargar los datos detallados de la variedad');
+      setToast(errorToast('No se pudieron cargar los datos detallados de la variedad'));
     } finally {
       setIsLoading(false);
     }

@@ -41,17 +41,17 @@ const TaskTable = () => {
       if (selectedTask) {
         const response = await taskService.update(selectedTask.id, task);
         setTasks(tasks.map(t => t.id === selectedTask.id ? response : t));
-        successToast('Tarea actualizada correctamente');
+        setToast(successToast('Tarea actualizada correctamente'));
       } else {
         const response = await taskService.create(task);
         setTasks([...tasks, response]);
-        successToast('Tarea creada correctamente');
+        setToast(successToast('Tarea creada correctamente'));
       }
       setIsModalOpen(false);
       setSelectedTask(null);
 
     } catch {
-      errorToast('Error al guardar la tarea');
+      setToast(errorToast('Error al guardar la tarea'));
     } finally {
       setIsLoading(false);
     }
@@ -63,9 +63,9 @@ const TaskTable = () => {
       try {
         await taskService.delete(id);
         setTasks(tasks.filter(t => t.id !== id));
-        successToast('Tarea eliminada correctamente');
+        setToast(successToast('Tarea eliminada correctamente'));
       } catch {
-        errorToast('Error al eliminar la tarea');
+        setToast(errorToast('Error al eliminar la tarea'));
       } finally {
         setIsLoading(false);
       }

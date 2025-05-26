@@ -43,18 +43,17 @@ const VarietyTable = () => {
         setVarieties(varieties.map(v =>
           v.id === selectedVariety.id ? response : v
         ));
-        successToast('Variedad actualizada correctamente');
+        setToast(successToast('Variedad actualizada correctamente'));
       } else {
         // Crear nueva variedad
         const response = await varietyService.create(varietyData.nombre);
         setVarieties([...varieties, response]);
-        successToast('Variedad creada correctamente');
+        setToast(successToast('Variedad creada correctamente'));
       }
       setIsModalOpen(false);
       setSelectedVariety(null);
-
     } catch {
-      errorToast('Error al guardar la variedad');
+      setToast(errorToast('Error al guardar la variedad'));
     } finally {
       setIsLoading(false);
     }
@@ -66,18 +65,9 @@ const VarietyTable = () => {
       try {
         await varietyService.delete(id);
         setVarieties(varieties.filter(v => v.id !== id));
-
-        // Mostrar mensaje de éxito para eliminación
-        setToast({
-          type: 'success',
-          message: 'Variedad eliminada correctamente'
-        });
-      } catch (err) {
-        console.error('Error al eliminar variedad:', err);
-        setToast({
-          type: 'error',
-          message: 'No se pudo eliminar la variedad. Es posible que esté siendo utilizada en uno o más cuarteles.'
-        });
+        setToast(successToast('Variedad eliminada correctamente'));
+      } catch {
+        setToast(errorToast('No se pudo eliminar la variedad. Es posible que esté siendo utilizada en uno o más cuarteles.'));
       } finally {
         setIsLoading(false);
       }
