@@ -1,4 +1,3 @@
-// src/components/QuarterWorkdays.tsx
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Clock, UserCheck, Edit, Trash2 } from 'lucide-react';
 import WorkdayModal from './WorkdayModal';
@@ -54,7 +53,7 @@ const QuarterWorkdays = () => {
       const response = await employeeService.getAll();
       setEmployees(response);
     } catch {
-      errorToast('Error al obtener los empleados.')
+      setToast(errorToast('Error al obtener los empleados.'));
     }
   };
 
@@ -63,7 +62,7 @@ const QuarterWorkdays = () => {
       const response = await taskService.getAll();
       setTasks(response);
     } catch {
-      errorToast('Error al cargar tareas.');
+      setToast(errorToast('Error al cargar tareas.'));
     }
   };
 
@@ -109,9 +108,9 @@ const QuarterWorkdays = () => {
       try {
         await workdayService.delete(workdayId);
         setWorkdays(workdays.filter(w => w.id !== workdayId));
-        successToast('Jornal eliminado correctamente');
+        setToast(successToast('Jornal eliminado correctamente'));
       } catch {
-        errorToast('Error al eliminar el jornal');
+        setToast(errorToast('Error al eliminar el jornal'));
       }
     }
   };
@@ -124,16 +123,16 @@ const QuarterWorkdays = () => {
         setWorkdays(workdays.map(w =>
           w.id === workdayData.id ? mapApiWorkday(response) : w
         ));
-        successToast('Jornal actualizado correctamente');
+        setToast(successToast('Jornal actualizado correctamente'));
       } else {
         response = await workdayService.create(workdayData);
         setWorkdays([...workdays, mapApiWorkday(response)]);
-        successToast('Jornal registrado correctamente');
+        setToast(successToast('Jornal registrado correctamente'));
       }
       setIsModalOpen(false);
       setSelectedWorkday(null);
     } catch {
-      errorToast('Error al guardar el jornal');
+      setToast(errorToast('Error al guardar el jornal'));
     }
   };
 
