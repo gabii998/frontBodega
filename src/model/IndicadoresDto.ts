@@ -1,7 +1,6 @@
 export default interface IndicadoresDto {
   estructura: number;
   totalProductivo: number;
-  jornalesTotales: number;
   jornalesNoProductivos: number;
   jornalesPagados: number;
   rendimiento: number;
@@ -11,7 +10,6 @@ export default interface IndicadoresDto {
 export const createIndicadores = (): IndicadoresDto => ({
   estructura: 0,
   totalProductivo: 0,
-  jornalesTotales: 0,
   jornalesNoProductivos: 0,
   jornalesPagados: 0,
   rendimiento: 0,

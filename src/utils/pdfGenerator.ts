@@ -83,15 +83,9 @@ export const generateReportPDF = ({
         ? detalleVariedad.superficie
         : report.superficie;
 
-    // Título del documento
-    let nombreVariedad = '';
 
-    addText(`Cuartel: ${report.cuartel?.nombre}`, 12, true);
-    if (report.esVariedad) {
-        nombreVariedad = `Variedad: ${report.nombre}`;
-    } else {
-        nombreVariedad = 'Resumen de cuartel';
-    }
+    addText(`Cuartel: ${report.esVariedad ? report.cuartel?.nombre : report.nombre}`, 12, true);
+    const nombreVariedad = report.esVariedad ? `Variedad: ${report.nombre}` : 'Resumen de cuartel';
 
     addMultiAlignedText([
         { text: nombreVariedad, align: 'left' },
@@ -155,7 +149,7 @@ export const generateReportPDF = ({
     // Indicadores
     addSeparator();
 
-    addText(`Total General: ${generalSummary.jornalesTotales} jornales`,11,true);
+    addText(`Total General: ${detalleVariedad?.jornalesTotales} jornales`,11,true);
 
     // if (!report.esVariedad) {
     //     addText(`Estructura: ${generalSummary.structure} jornales`);
@@ -175,7 +169,7 @@ export const generateReportPDF = ({
     doc.text(`Generado el: ${fechaGeneracion}`, margin, yPosition);
 
     // Nombre del archivo
-    const fileName = `reporte_${report.cuartel?.nombre}_${report.anio}${report.esVariedad ? `_${report.nombre}` : ''}.pdf`;
+    const fileName = `reporte_${report.esVariedad ? report.cuartel?.nombre : report.nombre}_${report.anio}${report.esVariedad ? `_${report.nombre}` : ''}.pdf`;
 
     // Guardar el PDF
     doc.save(fileName);
