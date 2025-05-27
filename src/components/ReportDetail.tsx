@@ -3,14 +3,13 @@ import { Users, PenTool as Tool, ArrowLeft, BarChart, Edit, Download } from 'luc
 import SummaryModal from './SummaryModal';
 import ReportDetailProps from '../model/ReportDetailProps';
 import DetalleVariedad from '../model/DetalleVariedad';
-import CategorySummary from '../model/CategorySummary';
-import TaskSummary from '../model/TaskSummary';
 import SummaryFields from '../model/SummaryFields';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Toast from './Toast';
 import { generateReportPDF } from '../utils/pdfGenerator';
 import { reportService } from '../services/reportService';
 import IndicadoresDto, { createIndicadores } from '../model/IndicadoresDto';
+import TareaJornal from '../model/TareaJornal';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -24,8 +23,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     fetchDetalleVariedad();
     fetchIndicadores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report, generalSummary]);
-
+  }, []);
 
   const handleGeneratePDF = async () => {
     setIsGeneratingPDF(true);
@@ -34,9 +32,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
       generateReportPDF({
         report,
         detalleVariedad,
-        generalSummary,
-        manualSummary,
-        mechanicalSummary
+        generalSummary
       });
       setToast(successToast('PDF generado correctamente'));
     } catch {
@@ -47,10 +43,9 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   };
 
   const fetchIndicadores = async () => {
-    if (!report.quarter.id) return;
     setIsLoading(true);
     try {
-      const response = await reportService.getIndicadores(report.date, report.quarter.id, report.variedadId);
+      const response = await reportService.getIndicadores(report);
       setGeneralSummary(response);
     } catch {
       setToast(errorToast('Error al cargar los indicadores'));
@@ -62,7 +57,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const fetchDetalleVariedad = async () => {
     setIsLoading(true);
     try {
-      const response = await reportService.getVariedadDetalle(report.date, report.quarter.id ?? 0, report.variedadId ?? 0);
+      const response = await reportService.getVariedadDetalle(report);
       setDetalleVariedad(response);
     } catch {
       setToast(errorToast('No se pudieron cargar los datos detallados de la variedad'));
@@ -71,50 +66,22 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     }
   };
 
-  const getTaskData = (): { manual: CategorySummary; mechanical: CategorySummary } | null => {
-    if (detalleVariedad != null) {
-      const superficie = detalleVariedad.superficie || 1;
-      const manualTasks: TaskSummary[] = detalleVariedad.tareasManuales;
-      const mechanicalTasks: TaskSummary[] = detalleVariedad.tareasMecanicas;
-
-      return {
-        manual: {
-          totalHours: detalleVariedad.jornalesManuales * 8,
-          jornales: detalleVariedad.jornalesManuales,
-          workdaysPerHectare: detalleVariedad.jornalesManuales / superficie,
-          tasks: manualTasks
-        },
-        mechanical: {
-          totalHours: detalleVariedad.jornalesMecanicos * 8,
-          jornales: detalleVariedad.jornalesMecanicos,
-          workdaysPerHectare: detalleVariedad.jornalesMecanicos / superficie,
-          tasks: mechanicalTasks
-        }
-      };
-    }
-    return null;
-  };
-
-  const taskData = getTaskData();
-  const manualSummary: CategorySummary | null = taskData?.manual ?? null;
-  const mechanicalSummary: CategorySummary | null = taskData?.mechanical ?? null;
-
   const handleSaveSummary = async (newSummary: IndicadoresDto) => {
     setIsLoading(true);
     try {
       const response = await reportService.updateIndicadores(report,newSummary);
       if (response) {
         setGeneralSummary(newSummary);
-        successToast('Indicadores actualizados correctamente');
+        setToast(successToast('Indicadores actualizados correctamente'));
       }
     } catch {
-      errorToast('Error al guardar los indicadores');
+      setToast(errorToast('Error al guardar los indicadores'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderCategoryTable = (type: 'manual' | 'mecanica', summary: CategorySummary | null) => {
+  const renderCategoryTable = (type: 'manual' | 'mecanica', summary: TareaJornal[] | null) => {
     const icon = type === 'manual' ? (
       <Users className="h-5 w-5 text-indigo-500" />
     ) : (
@@ -123,6 +90,8 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
     const title = type === 'manual' ? 'Tareas Manuales' : 'Tareas Mecánicas';
     const colorClass = type === 'manual' ? 'bg-indigo-50' : 'bg-orange-50';
+    const totalTareas = (type === 'manual' ? detalleVariedad?.jornalesManuales : detalleVariedad?.jornalesMecanicos) ?? 0;
+    const totalPorHectarea = totalTareas / (detalleVariedad?.superficie ?? 0);
 
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -131,12 +100,12 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="divide-y divide-gray-200">
-          {summary == null || summary.tasks.length === 0 ? (
+          {summary == null || summary.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
               No hay tareas registradas
             </div>
           ) : (
-            summary.tasks.map(task => (
+            summary.map(task => (
               <div key={task.idTarea} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium text-gray-900 w-1/3">{task.nombreTarea}</span>
@@ -155,10 +124,10 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div className="flex justify-between items-center font-medium">
               <span className="text-gray-900">Total Categoría</span>
               <span className="text-gray-900">
-                {((summary?.totalHours || 0) / 8).toFixed(2)} Jornales
+                {totalTareas.toFixed(2)} Jornales
               </span>
               <span className="text-gray-900">
-                {summary?.workdaysPerHectare?.toFixed(2) || "0.00"} jornales/ha
+                {(totalPorHectarea).toFixed(2)} jornales/ha
               </span>
             </div>
           </div>
@@ -169,15 +138,10 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   const renderGeneralSummary = (summary: IndicadoresDto) => {
     const summaryFields: SummaryFields[] = [
-      // ...(!report.esVariedad ? [
-      //   { key: 'structure', label: 'Estructura', suffix: 'jornales' } as SummaryFields,
-      //   { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' } as SummaryFields,
-      //   { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' } as SummaryFields,
-      //   { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' } as SummaryFields
-      // ] : []),
       { key: 'rendimiento', label: 'Rendimiento', suffix: 'qq/ha' },
       { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
     ];
+    const total = ((detalleVariedad?.jornalesTotales ?? 0) / (detalleVariedad?.superficie ?? 0)).toFixed(2);
 
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -205,10 +169,10 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div className="flex justify-between items-center">
               <span className="font-medium text-gray-900 w-1/3">Total General:</span>
               <span className="text-gray-900 w-1/3 text-center block">
-                {summary.jornalesTotales} jornales
+                {detalleVariedad?.jornalesTotales} jornales
               </span>
               <span className="text-gray-900 w-1/3 text-end block">
-                {summary.jornalesTotales} jornales/ha
+                {total} jornales/ha
               </span>
             </div>
           </div>
@@ -227,7 +191,6 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     );
   };
 
-
   return (
     <div className="p-6">
       <div className="flex items-center space-x-4 mb-6">
@@ -240,15 +203,15 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           </button>
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">
-              {report.quarter.nombre}
-              {report.esVariedad && report.variedadNombre && (
+              {report.cuartel?.nombre} 
+              {report.esVariedad && report.nombre && (
                 <span className="text-lg font-normal ml-2">
-                  - {report.variedadNombre}
+                  - {report.nombre}
                 </span>
               )}
             </h2>
             <p className="text-gray-500">
-              Reporte del año {report.date}
+              Reporte del año {report.anio}
             </p>
           </div>
         </span>
@@ -284,7 +247,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
               <p className="text-2xl font-semibold text-gray-900">
                 {report.esVariedad && detalleVariedad
                   ? detalleVariedad.superficie
-                  : report.quarter.superficieTotal}
+                  : report.superficie}
               </p>
             </div>
             <div>
@@ -292,15 +255,15 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
               <p className="text-2xl font-semibold text-gray-900">
                 {report.esVariedad && detalleVariedad
                   ? detalleVariedad.jornalesTotales
-                  : report.totalWorkdays}
+                  : report.jornales}
               </p>
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          {renderCategoryTable('mecanica', mechanicalSummary)}
-          {renderCategoryTable('manual', manualSummary)}
+          {renderCategoryTable('mecanica', detalleVariedad?.tareasMecanicas ?? [])}
+          {renderCategoryTable('manual', detalleVariedad?.tareasManuales ?? [])}
           {renderGeneralSummary(generalSummary)}
         </div>
       </div>

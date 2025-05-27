@@ -1,8 +1,8 @@
-import GeneralSummary from "./GeneralSummary";
+import IndicadoresDto from "./IndicadoresDto";
 
 export default interface SummaryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (summary: GeneralSummary) => void;
-    summary: GeneralSummary;
+    onSave: (summary: IndicadoresDto) => void;
+    summary: IndicadoresDto;
   }

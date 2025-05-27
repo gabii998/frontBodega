@@ -1,4 +1,4 @@
-import Employee from "./Employee";
+import { Employee } from "./Employee";
 import Task from "./Task";
 import VarietyCuartel from "./VarietyCuartel";
 import Workday from "./Workday";

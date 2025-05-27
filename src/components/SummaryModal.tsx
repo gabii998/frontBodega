@@ -22,10 +22,6 @@ const SummaryModal = ({ isOpen, onClose, onSave, summary }: SummaryModalProps) =
   };
 
   const fields: { key: keyof IndicadoresDto; label: string; suffix: string }[] = [
-    // { key: 'structure', label: 'Estructura', suffix: 'jornales' },
-    // { key: 'productiveTotal', label: 'Total Productivos', suffix: 'jornales' },
-    // { key: 'nonProductiveWorkdays', label: 'Jornales No Productivos', suffix: 'jornales' },
-    // { key: 'totalPaidWorkdays', label: 'Total Jornales Pagados', suffix: 'jornales' },
     { key: 'rendimiento', label: 'Rendimiento', suffix: 'qq/Ha' }
   ];
 

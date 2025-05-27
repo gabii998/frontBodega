@@ -1,7 +1,7 @@
-import Report from "./Report";
+import { ReporteResponse } from "./ReporteCuartel";
 
 interface ReportDetailProps {
-    report: Report;
+    report: ReporteResponse;
     onBack: () => void;
 }
 

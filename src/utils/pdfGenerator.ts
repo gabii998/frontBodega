@@ -1,24 +1,18 @@
-// src/utils/pdfGenerator.ts
 import jsPDF from 'jspdf';
 import DetalleVariedad from '../model/DetalleVariedad';
-import CategorySummary from '../model/CategorySummary';
-import Report from '../model/Report';
 import IndicadoresDto from '../model/IndicadoresDto';
+import { ReporteResponse } from '../model/ReporteCuartel';
 
 interface GeneratePDFParams {
-    report: Report;
+    report: ReporteResponse;
     detalleVariedad: DetalleVariedad | null;
     generalSummary: IndicadoresDto;
-    manualSummary: CategorySummary | null;
-    mechanicalSummary: CategorySummary | null;
 }
 
 export const generateReportPDF = ({
     report,
     detalleVariedad,
-    generalSummary,
-    manualSummary,
-    mechanicalSummary
+    generalSummary
 }: GeneratePDFParams): void => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -87,14 +81,14 @@ export const generateReportPDF = ({
 
     const superficie = report.esVariedad && detalleVariedad
         ? detalleVariedad.superficie
-        : report.quarter.superficieTotal;
+        : report.superficie;
 
     // Título del documento
     let nombreVariedad = '';
 
-    addText(`Cuartel: ${report.quarter.nombre}`, 12, true);
-    if (report.esVariedad && report.variedadNombre) {
-        nombreVariedad = `Variedad: ${report.variedadNombre}`;
+    addText(`Cuartel: ${report.cuartel?.nombre}`, 12, true);
+    if (report.esVariedad) {
+        nombreVariedad = `Variedad: ${report.nombre}`;
     } else {
         nombreVariedad = 'Resumen de cuartel';
     }
@@ -105,18 +99,18 @@ export const generateReportPDF = ({
     ], margin, margin, 12);
 
     addMultiAlignedText([
-        { text: `Año: ${report.date}`, align: 'left' },
+        { text: `Año: ${report.anio}`, align: 'left' },
         { text: `${report.hileras ?? 0} hileras`, align: 'right' }
     ], margin, margin, 12);
 
 
     addSeparator();
     // Tareas Mecánicas
-    if (mechanicalSummary != null && mechanicalSummary.tasks.length > 0) {
+    if (detalleVariedad?.tareasMecanicas != null && detalleVariedad?.tareasMecanicas.length > 0) {
         addText('TAREAS MECÁNICAS', 14, true);
 
         doc.setFont(undefined, 'normal');
-        mechanicalSummary.tasks.forEach(task => {
+        detalleVariedad?.tareasMecanicas.forEach(task => {
             addMultiAlignedText([
                 { text: `${task.nombreTarea}`, align: 'left' },
                 { text: `${task.jornales}`, align: 'center' },
@@ -128,19 +122,19 @@ export const generateReportPDF = ({
         doc.setFont(undefined, 'bold');
         addMultiAlignedText([
                 { text: `Total Tareas Mecanicas`, align: 'left' },
-                { text: `${mechanicalSummary.jornales.toFixed(2)}`, align: 'center' },
-                { text: `${mechanicalSummary.workdaysPerHectare?.toFixed(2) || '0.00'}`, align: 'right' }
+                { text: `${detalleVariedad?.jornalesMecanicos.toFixed(2)}`, align: 'center' },
+                { text: `${detalleVariedad.jornalesMecanicos?.toFixed(2) || '0.00'}`, align: 'right' }
             ], margin, margin, 11);
     }
 
     addSeparator();
 
     // Tareas Manuales
-    if (manualSummary != null && manualSummary.tasks.length > 0) {
+    if (detalleVariedad?.tareasManuales != null && detalleVariedad?.tareasManuales.length > 0) {
         addText('TAREAS MANUALES', 14, true);
 
         doc.setFont(undefined, 'normal');
-        manualSummary.tasks.forEach(task => {
+        detalleVariedad?.tareasManuales.forEach(task => {
             addMultiAlignedText([
                 { text: `${task.nombreTarea}`, align: 'left' },
                 { text: `${task.jornales}`, align: 'center' },
@@ -152,8 +146,8 @@ export const generateReportPDF = ({
         doc.setFont(undefined, 'bold');
         addMultiAlignedText([
                 { text: `Total Tareas Manuales`, align: 'left' },
-                { text: `${manualSummary.jornales.toFixed(2)}`, align: 'center' },
-                { text: `${manualSummary.workdaysPerHectare?.toFixed(2) || '0.00'}`, align: 'right' }
+                { text: `${detalleVariedad?.jornalesManuales.toFixed(2)}`, align: 'center' },
+                { text: `${detalleVariedad?.jornalesManuales.toFixed(2) || '0.00'}`, align: 'right' }
             ], margin, margin, 11);
     }
     
@@ -181,7 +175,7 @@ export const generateReportPDF = ({
     doc.text(`Generado el: ${fechaGeneracion}`, margin, yPosition);
 
     // Nombre del archivo
-    const fileName = `reporte_${report.quarter.nombre}_${report.date}${report.esVariedad ? `_${report.variedadNombre}` : ''}.pdf`;
+    const fileName = `reporte_${report.cuartel?.nombre}_${report.anio}${report.esVariedad ? `_${report.nombre}` : ''}.pdf`;
 
     // Guardar el PDF
     doc.save(fileName);

@@ -6,18 +6,18 @@ import Toast from './Toast';
 import { useFarm } from '../context/FarmContext';
 import ToastProps, { errorToast } from '../model/ToastProps';
 import { reportService } from '../services/reportService';
-import ReporteCuartel from '../model/ReporteCuartel';
 import Title from '../common/Title';
 import ErrorBanner from '../common/ErrorBanner';
+import { ReporteResponse } from '../model/ReporteCuartel';
 
 const AnimatedVarietyRows = ({
   varieties,
   isExpanded,
   onVarietyClick
 }: {
-  varieties: ReporteCuartel[],
+  varieties: ReporteResponse[],
   isExpanded: boolean,
-  onVarietyClick: (variety: ReporteCuartel) => void
+  onVarietyClick: (variety: ReporteResponse) => void
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | undefined>(0);
@@ -50,7 +50,7 @@ const AnimatedVarietyRows = ({
             <div className="flex items-center">
               <div className="ml-9">
                 <div className="font-medium text-gray-700">
-                  • {variety.cuartelNombre}
+                  • {variety.nombre}
                 </div>
                 <div className="text-sm text-gray-500 ml-2">{variety.superficie} hectáreas</div>
               </div>
@@ -59,12 +59,12 @@ const AnimatedVarietyRows = ({
           <div className="px-6 py-4 w-1/6">
             <div className="flex items-center text-gray-700">
               <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-              <span>{variety.fecha}</span>
+              <span>{variety.anio}</span>
             </div>
           </div>
           <div className="px-6 py-4 text-gray-700 w-1/6">
             <div>
-              <div className="font-medium">{variety.jornalesTotales.toFixed(2)} jornales</div>
+              <div className="font-medium">{variety.jornales.toFixed(2)} jornales</div>
             </div>
           </div>
           <div className="px-6 py-4 w-1/6">
@@ -93,10 +93,10 @@ const AnimatedVarietyRows = ({
 
 const ReportsTable = () => {
   const { activeFarm } = useFarm();
-  const [selectedReport, setSelectedReport] = useState<ReporteCuartel | null>(null);
+  const [selectedReport, setSelectedReport] = useState<ReporteResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reports, setReports] = useState<ReporteCuartel[]>([]);
+  const [reports, setReports] = useState<ReporteResponse[]>([]);
   const [toast, setToast] = useState<ToastProps | null>(null);
   const [expandedQuartels, setExpandedQuartels] = useState<number[]>([]);
   const currentYear = new Date().getFullYear();
@@ -124,8 +124,10 @@ const ReportsTable = () => {
     }
   };
 
-  const toggleExpansion = (cuartelId: number, e: React.MouseEvent) => {
+  const toggleExpansion = (cuartelId: number|null|undefined, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if(cuartelId === null || cuartelId === undefined) return;
 
     if (expandedQuartels.includes(cuartelId)) {
       setExpandedQuartels(expandedQuartels.filter(id => id !== cuartelId));
@@ -136,10 +138,6 @@ const ReportsTable = () => {
 
   const isQuartelExpanded = (cuartelId: number) => {
     return expandedQuartels.includes(cuartelId);
-  };
-
-  const getVarieties = (cuartelId: number) => {
-    return reports.filter(report => report.esVariedad && report.cuartelId === cuartelId);
   };
 
   if (isLoading) {
@@ -156,33 +154,12 @@ const ReportsTable = () => {
   if (selectedReport) {
     return (
       <ReportDetail
-        report={{
-          id: selectedReport.id,
-          quarter: {
-            id: selectedReport.cuartelId,
-            nombre: selectedReport.cuartelNombre,
-            superficieTotal: selectedReport.superficie,
-            variedades: [],
-            hileras: selectedReport.hileras
-          },
-          date: selectedReport.fecha,
-          totalHours: selectedReport.jornalesTotales * 8,
-          totalWorkdays: selectedReport.jornalesTotales,
-          manualWorkdays: selectedReport.jornalesTotales,
-          mechanicalWorkdays: 0,
-          performance: selectedReport.rendimiento,
-         // variedadId: selectedReport.variedadId,
-          //variedadNombre: selectedReport.variedadNombre,
-          esVariedad: selectedReport.esVariedad,
-          superficie: selectedReport.superficie,
-          hileras: selectedReport.hileras
-        }}
+        report={selectedReport}
         onBack={() => setSelectedReport(null)}
       />
     );
   }
 
-  // Filtrar solo los cuarteles (reportes que no son variedades)
   const cuarteles = reports.filter(report => !report.esVariedad);
 
   return (
@@ -258,9 +235,9 @@ const ReportsTable = () => {
               ) : (
                 // Iteramos solo por los cuarteles, no las variedades
                 cuarteles.map((cuartel) => {
-                  const varieties = getVarieties(cuartel.cuartelId);
+                  const varieties = cuartel.reporteVariedades;
                   const hasVarieties = varieties.length > 0;
-                  const isExpanded = isQuartelExpanded(cuartel.cuartelId);
+                  const isExpanded = isQuartelExpanded(cuartel.id);
 
                   return (
                     <div key={cuartel.id}>
@@ -270,7 +247,7 @@ const ReportsTable = () => {
                         onClick={(e) => {
                           // Solo expandir/contraer si hacen clic en cualquier lugar excepto los botones
                           if (hasVarieties && (e.target as HTMLElement).closest('button') === null) {
-                            toggleExpansion(cuartel.cuartelId, e);
+                            toggleExpansion(cuartel.id ?? 0, e);
                           }
                         }}
                       >
@@ -285,7 +262,7 @@ const ReportsTable = () => {
                             )}
                             <div>
                               <div className="font-medium text-gray-900">
-                                {cuartel.cuartelNombre}
+                                {cuartel.nombre}
                               </div>
                               <div className="text-sm text-gray-500">{cuartel.superficie} hectáreas</div>
                             </div>
@@ -294,12 +271,12 @@ const ReportsTable = () => {
                         <div className="px-6 py-4 w-1/6">
                           <div className="flex items-center">
                             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-                            <span>{cuartel.fecha}</span>
+                            <span>{cuartel.anio}</span>
                           </div>
                         </div>
                         <div className="px-6 py-4 w-1/6">
                           <div>
-                            <div className="font-medium text-gray-900">{cuartel.jornalesTotales.toFixed(2)} jornales</div>
+                            <div className="font-medium text-gray-900">{cuartel.jornales.toFixed(2)} jornales</div>
                           </div>
                         </div>
                         <div className="px-6 py-4 w-1/6">
@@ -326,7 +303,7 @@ const ReportsTable = () => {
                             {hasVarieties && (
                               <button
                                 className="flex items-center px-3 py-1.5 text-xs text-gray-700 rounded hover:bg-gray-50 transition-colors"
-                                onClick={(e) => toggleExpansion(cuartel.cuartelId, e)}
+                                onClick={(e) => toggleExpansion(cuartel.cuartel?.id, e)}
                                 title={isExpanded ? "Ocultar variedades" : "Mostrar variedades"}
                               >
                                 {isExpanded ?

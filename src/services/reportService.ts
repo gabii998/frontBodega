@@ -1,46 +1,44 @@
 import axios from 'axios';
-import ReporteCuartel from '../model/ReporteCuartel';
 import IndicadoresDto from '../model/IndicadoresDto';
 import DetalleVariedad from '../model/DetalleVariedad';
-import Report from '../model/Report';
+import { ReporteResponse } from '../model/ReporteCuartel';
 
 export const reportService = {
-  async getByYear(year: number, fincaId: number): Promise<ReporteCuartel[]> {
-    const response = await axios.get<ReporteCuartel[]>(
+  async getByYear(year: number, fincaId: number): Promise<ReporteResponse[]> {
+    const response = await axios.get<ReporteResponse[]>(
       `/api/reportes/anio/${year}/finca/${fincaId}`
     );
     return response.data;
   },
 
-  async getIndicadores(year: string, cuartelId: number, variedadId?: number): Promise<IndicadoresDto> {
-    const endpoint = variedadId
-      ? `/api/reportes/anio/${year}/cuartel/${cuartelId}/variedad/${variedadId}/indicadores`
-      : `/api/reportes/anio/${year}/cuartel/${cuartelId}/indicadores`;
+  async getIndicadores(report:ReporteResponse): Promise<IndicadoresDto> {
+    const endpoint = report.esVariedad
+      ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/indicadores`
+      : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/indicadores`;
     
     const response = await axios.get<IndicadoresDto>(endpoint);
     return response.data;
   },
 
   async updateIndicadores(
-    report:Report,
+    report:ReporteResponse,
     indicadores: IndicadoresDto,
   ): Promise<IndicadoresDto> {
-    const endpoint = report.variedadId
-      ? `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/variedad/${report.variedadId}/indicadores`
-      : `/api/reportes/anio/${report.date}/cuartel/${report.quarter.id}/indicadores`;
+    const endpoint = report.id
+      ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/indicadores`
+      : `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/indicadores`;
     
     const response = await axios.put<IndicadoresDto>(endpoint, indicadores);
     return response.data;
   },
 
   async getVariedadDetalle(
-    year: string, 
-    cuartelId: number, 
-    variedadId: number
+    report:ReporteResponse
   ): Promise<DetalleVariedad> {
-    const response = await axios.get<DetalleVariedad>(
-      `/api/reportes/anio/${year}/cuartel/${cuartelId}/variedad/${variedadId}/detalle`
-    );
+    const endpoint = report.esVariedad
+    ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/detalle`
+    : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/detalle`
+    const response = await axios.get<DetalleVariedad>(endpoint);
     return response.data;
   }
 };

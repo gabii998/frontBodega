@@ -1,14 +1,17 @@
-import VariedadReporte from "./VariedadReporte";
+export interface ReporteResponse {
+  id:number,
+  nombre:string,
+  anio:string,
+  superficie:number,
+  hileras:number,
+  jornales:number,
+  rendimiento:number,
+  esVariedad:boolean,
+  cuartel:CuartelReporte | null,
+  reporteVariedades:ReporteResponse[]
+}
 
-export default interface ReporteCuartel {
-  id:number;
-  cuartelId: number;
-  cuartelNombre: string;
-  superficie: number;
-  hileras:number;
-  fecha: string;
-  jornalesTotales: number;
-  rendimiento: number;
-  esVariedad:boolean;
-  variedades: VariedadReporte[];
+export interface CuartelReporte {
+  id:number,
+  nombre:string
 }
