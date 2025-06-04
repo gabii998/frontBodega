@@ -204,7 +204,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">
               {report.cuartel?.nombre} 
-              {report.esVariedad && report.nombre && (
+              {report.tipoReporte === 'VARIEDAD' && report.nombre && (
                 <span className="text-lg font-normal ml-2">
                   - {report.nombre}
                 </span>
@@ -245,17 +245,13 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div>
               <p className="text-sm font-medium text-gray-500">Hectáreas</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {report.esVariedad && detalleVariedad
-                  ? detalleVariedad.superficie
-                  : report.superficie}
+                {detalleVariedad?.superficie}
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Total Jornales</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {report.esVariedad && detalleVariedad
-                  ? detalleVariedad.jornalesTotales
-                  : report.jornales}
+                {detalleVariedad?.jornalesTotales.toFixed(2)}
               </p>
             </div>
           </div>

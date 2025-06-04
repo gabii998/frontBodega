@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, ClipboardList, PenTool as Tool, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, ClipboardList } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import Task from '../model/Task';
@@ -72,14 +72,6 @@ const TaskTable = () => {
     }
   };
 
-  const getTypeIcon = (type: Task['tipo']) => {
-    return type === 'Manual' ? (
-      <Users className="h-5 w-5 text-indigo-500" />
-    ) : (
-      <Tool className="h-5 w-5 text-orange-500" />
-    );
-  };
-
   const getTypeLabel = (type: Task['tipo']) => {
     return type === 'Manual' ? (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -98,8 +90,7 @@ const TaskTable = () => {
         <ClipboardList className="h-5 w-5 text-gray-400 mr-2" />
         {task.nombre}
       </div>,
-      <div className="flex items-center space-x-2">
-        {getTypeIcon(task.tipo)}
+      <div className="flex">
         {getTypeLabel(task.tipo)}
       </div>,
       <div className="flex space-x-3">

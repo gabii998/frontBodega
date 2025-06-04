@@ -61,7 +61,7 @@ const QuarterModal = ({
       setFormData({
         ...formData,
         variedades: [...formData.variedades, {
-          id: variety.id,
+          idVariedad: variety.id,
           nombre: variety.nombre,
           superficie: 0,
           hileras: 0
@@ -77,7 +77,7 @@ const QuarterModal = ({
   const handleRemoveVariety = (variedadId: number) => {
     setFormData({
       ...formData,
-      variedades: formData.variedades.filter(v => v.id !== variedadId)
+      variedades: formData.variedades.filter(v => v.idVariedad !== variedadId)
     });
   };
 
@@ -85,7 +85,7 @@ const QuarterModal = ({
     setFormData({
       ...formData,
       variedades: formData.variedades.map(v =>
-        v.id === id ? { ...v, superficie } : v
+        v.idVariedad === id ? { ...v, superficie } : v
       )
     });
   };
@@ -94,7 +94,7 @@ const QuarterModal = ({
     setFormData({
       ...formData,
       variedades: formData.variedades.map(v =>
-        v.id === id ? { ...v, hileras } : v
+        v.idVariedad === id ? { ...v, hileras } : v
       )
     });
   };
@@ -192,7 +192,7 @@ const QuarterModal = ({
   };
 
   const getUnusedVarieties = () => {
-    const usedIds = new Set(formData.variedades.map(v => v.id));
+    const usedIds = new Set(formData.variedades.map(v => v.idVariedad));
     return availableVarieties.filter(v => !usedIds.has(v.id));
   };
 
@@ -202,7 +202,7 @@ const QuarterModal = ({
       <input
           type="number"
           value={variety.superficie || ''}
-          onChange={(e) => handleVarietyChange(variety.id ?? -1, Number(e.target.value))}
+          onChange={(e) => handleVarietyChange(variety.idVariedad ?? -1, Number(e.target.value))}
           placeholder="Superficie (ha)"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
           step="0.01"
@@ -212,7 +212,7 @@ const QuarterModal = ({
         <input
           type="number"
           value={variety.hileras || ''}
-          onChange={(e) => handleHilerasChange(variety.id ?? -1, Number(e.target.value))}
+          onChange={(e) => handleHilerasChange(variety.idVariedad ?? -1, Number(e.target.value))}
           placeholder="Hileras"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
           step="1"
@@ -221,7 +221,7 @@ const QuarterModal = ({
         />,
         <button
           type="button"
-          onClick={() => handleRemoveVariety(variety.id ?? -1)}
+          onClick={() => handleRemoveVariety(variety.idVariedad ?? -1)}
           className="delete-button"
           disabled={isLoading}
         >
@@ -295,7 +295,7 @@ const QuarterModal = ({
                   </label>
                   <select
                     value={formData.sistema ?? ""}
-                    onChange={(e) => setFormData({ ...formData, sistema: e.target.value as 'parral' | 'espaldero' })}
+                    onChange={(e) => setFormData({ ...formData, sistema: e.target.value as 'Parral' | 'Espaldero' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     disabled={isLoading}
                   >

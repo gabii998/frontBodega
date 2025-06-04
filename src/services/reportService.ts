@@ -12,9 +12,10 @@ export const reportService = {
   },
 
   async getIndicadores(report:ReporteResponse): Promise<IndicadoresDto> {
-    const endpoint = report.esVariedad
+    const endpoint = report.tipoReporte === 'GENERAL' ? `/api/reportes/anio/${report.anio}/indicadores`:
+    (report.tipoReporte === 'VARIEDAD'
       ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/indicadores`
-      : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/indicadores`;
+      : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/indicadores`);
     
     const response = await axios.get<IndicadoresDto>(endpoint);
     return response.data;
@@ -35,9 +36,10 @@ export const reportService = {
   async getVariedadDetalle(
     report:ReporteResponse
   ): Promise<DetalleVariedad> {
-    const endpoint = report.esVariedad
+    const endpoint = report.tipoReporte === 'GENERAL' ? `/api/reportes/anio/${report.anio}/detalle` : 
+    (report.tipoReporte === 'VARIEDAD'
     ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/detalle`
-    : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/detalle`
+    : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/detalle`)
     const response = await axios.get<DetalleVariedad>(endpoint);
     return response.data;
   }

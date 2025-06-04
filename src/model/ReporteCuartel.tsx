@@ -6,9 +6,9 @@ export interface ReporteResponse {
   hileras:number,
   jornales:number,
   rendimiento:number,
-  esVariedad:boolean,
+  tipoReporte: 'VARIEDAD' | 'CUARTEL' | 'ESPALDERO' | 'PARRAL' | 'GENERAL',
   cuartel:CuartelReporte | null,
-  reporteVariedades:ReporteResponse[]
+  reporteVariedades:ReporteResponse[],
 }
 
 export interface CuartelReporte {

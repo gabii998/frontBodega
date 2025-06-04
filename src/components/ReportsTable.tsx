@@ -124,10 +124,10 @@ const ReportsTable = () => {
     }
   };
 
-  const toggleExpansion = (cuartelId: number|null|undefined, e: React.MouseEvent) => {
+  const toggleExpansion = (cuartelId: number | null | undefined, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if(cuartelId === null || cuartelId === undefined) return;
+    if (cuartelId === null || cuartelId === undefined) return;
 
     if (expandedQuartels.includes(cuartelId)) {
       setExpandedQuartels(expandedQuartels.filter(id => id !== cuartelId));
@@ -140,11 +140,164 @@ const ReportsTable = () => {
     return expandedQuartels.includes(cuartelId);
   };
 
+  const itemReporte = (cuartel: ReporteResponse) => {
+    const varieties = cuartel.reporteVariedades;
+    const hasVarieties = (varieties ?? []).length > 0;
+    const isExpanded = isQuartelExpanded(cuartel.id);
+    return (<div key={cuartel.id}>
+      {/* Fila del cuartel */}
+      <div
+        className={`hover:bg-gray-50 ${hasVarieties ? 'cursor-pointer' : ''} flex ${isExpanded ? 'border-b-0' : 'border-b border-gray-200'}`}
+        onClick={(e) => {
+          // Solo expandir/contraer si hacen clic en cualquier lugar excepto los botones
+          if (hasVarieties && (e.target as HTMLElement).closest('button') === null) {
+            toggleExpansion(cuartel.id ?? 0, e);
+          }
+        }}
+      >
+        <div className="px-6 py-4 w-1/3">
+          <div className="flex items-center">
+            {hasVarieties && (
+              <div
+                className={`mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </div>
+            )}
+            <div>
+              <div className="font-medium text-gray-900">
+                {cuartel.nombre}
+              </div>
+              <div className="text-sm text-gray-500">{cuartel.superficie} hectáreas</div>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <div className="flex items-center">
+            <Calendar className="h-5 w-5 text-gray-400 mr-2" />
+            <span>{cuartel.anio}</span>
+          </div>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <div>
+            <div className="font-medium text-gray-900">{cuartel.jornales.toFixed(2)} jornales</div>
+          </div>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
+            {cuartel.rendimiento} qq/Ha
+          </span>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <div className="flex items-center space-x-3">
+            {/* Botón para ver el reporte del cuartel */}
+            <button
+              className="flex items-center justify-center px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedReport(cuartel);
+              }}
+              title="Ver reporte del cuartel"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Ver Reporte
+            </button>
+
+            {/* Botón para expandir/colapsar variedades */}
+            {hasVarieties && (
+              <button
+                className="flex items-center px-3 py-1.5 text-xs text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                onClick={(e) => toggleExpansion(cuartel.cuartel?.id, e)}
+                title={isExpanded ? "Ocultar variedades" : "Mostrar variedades"}
+              >
+                {isExpanded ?
+                  <ChevronDown className="h-5 w-5 ml-1" /> :
+                  <ChevronRight className="h-5 w-5 ml-1" />
+                }
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Filas de variedades con animación de expansión/colapso */}
+      {hasVarieties && (
+        <div className={isExpanded ? 'border-b border-gray-200' : ''}>
+          <AnimatedVarietyRows
+            varieties={varieties}
+            isExpanded={isExpanded}
+            onVarietyClick={setSelectedReport}
+          />
+        </div>
+      )}
+    </div>)
+  }
+
+  const itemReporteGeneral = (cuartel:ReporteResponse) => {
+
+    return (<div key="general">
+      {/* Fila del cuartel */}
+      <div
+        className={`hover:bg-gray-50 flex border-b border-gray-200`}
+        onClick={() => {
+
+        }}
+      >
+        <div className="px-6 py-4 w-1/3">
+          <div className="flex items-center">
+
+            <div>
+              <div className="font-medium text-gray-900">
+                {cuartel.nombre}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <div className="flex items-center">
+            <Calendar className="h-5 w-5 text-gray-400 mr-2" />
+            <span>{anioSeleccionado}</span>
+          </div>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <div>
+            <div className="font-medium text-gray-900">
+              {cuartel.jornales.toFixed(2)} jornales
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
+            -
+          </span>
+        </div>
+        <div className="px-6 py-4 w-1/6">
+          <div className="flex items-center space-x-3">
+            {/* Botón para ver el reporte del cuartel */}
+            <button
+              className="flex items-center px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedReport(cuartel);
+              }}
+              title="Ver reporte del cuartel"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Ver Reporte
+            </button>
+
+            {/* Botón para expandir/colapsar variedades */}
+          </div>
+        </div>
+      </div>
+    </div>)
+  }
+
   if (isLoading) {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <Title title='Reportes'/>
+          <Title title='Reportes' />
         </div>
         <TableShimmer columns={[30, 20, 15, 15, 20]} rows={3} />
       </div>
@@ -160,7 +313,7 @@ const ReportsTable = () => {
     );
   }
 
-  const cuarteles = reports.filter(report => !report.esVariedad);
+  const cuarteles = reports.filter(report => !(report.tipoReporte === 'VARIEDAD'));
 
   return (
     <div className="p-6">
@@ -173,7 +326,7 @@ const ReportsTable = () => {
       )}
 
       <div className="content">
-        <Title title='Reportes'/>
+        <Title title='Reportes' />
         <div className="flex items-center">
           <select
             value={anioSeleccionado}
@@ -235,98 +388,10 @@ const ReportsTable = () => {
               ) : (
                 // Iteramos solo por los cuarteles, no las variedades
                 cuarteles.map((cuartel) => {
-                  const varieties = cuartel.reporteVariedades;
-                  const hasVarieties = varieties.length > 0;
-                  const isExpanded = isQuartelExpanded(cuartel.id);
 
                   return (
-                    <div key={cuartel.id}>
-                      {/* Fila del cuartel */}
-                      <div
-                        className={`hover:bg-gray-50 ${hasVarieties ? 'cursor-pointer' : ''} flex ${isExpanded ? 'border-b-0' : 'border-b border-gray-200'}`}
-                        onClick={(e) => {
-                          // Solo expandir/contraer si hacen clic en cualquier lugar excepto los botones
-                          if (hasVarieties && (e.target as HTMLElement).closest('button') === null) {
-                            toggleExpansion(cuartel.id ?? 0, e);
-                          }
-                        }}
-                      >
-                        <div className="px-6 py-4 w-1/3">
-                          <div className="flex items-center">
-                            {hasVarieties && (
-                              <div
-                                className={`mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
-                              >
-                                <ChevronRight className="h-5 w-5" />
-                              </div>
-                            )}
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {cuartel.nombre}
-                              </div>
-                              <div className="text-sm text-gray-500">{cuartel.superficie} hectáreas</div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="px-6 py-4 w-1/6">
-                          <div className="flex items-center">
-                            <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-                            <span>{cuartel.anio}</span>
-                          </div>
-                        </div>
-                        <div className="px-6 py-4 w-1/6">
-                          <div>
-                            <div className="font-medium text-gray-900">{cuartel.jornales.toFixed(2)} jornales</div>
-                          </div>
-                        </div>
-                        <div className="px-6 py-4 w-1/6">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
-                            {cuartel.rendimiento} qq/Ha
-                          </span>
-                        </div>
-                        <div className="px-6 py-4 w-1/6">
-                          <div className="flex items-center space-x-3">
-                            {/* Botón para ver el reporte del cuartel */}
-                            <button
-                              className="flex items-center px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedReport(cuartel);
-                              }}
-                              title="Ver reporte del cuartel"
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              Ver Reporte
-                            </button>
-
-                            {/* Botón para expandir/colapsar variedades */}
-                            {hasVarieties && (
-                              <button
-                                className="flex items-center px-3 py-1.5 text-xs text-gray-700 rounded hover:bg-gray-50 transition-colors"
-                                onClick={(e) => toggleExpansion(cuartel.cuartel?.id, e)}
-                                title={isExpanded ? "Ocultar variedades" : "Mostrar variedades"}
-                              >
-                                {isExpanded ?
-                                  <ChevronDown className="h-5 w-5 ml-1" /> :
-                                  <ChevronRight className="h-5 w-5 ml-1" />
-                                }
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Filas de variedades con animación de expansión/colapso */}
-                      {hasVarieties && (
-                        <div className={isExpanded ? 'border-b border-gray-200' : ''}>
-                          <AnimatedVarietyRows
-                            varieties={varieties}
-                            isExpanded={isExpanded}
-                            onVarietyClick={setSelectedReport}
-                          />
-                        </div>
-                      )}
-                    </div>
+                    (cuartel.tipoReporte === 'CUARTEL') ?
+                      itemReporte(cuartel) : itemReporteGeneral(cuartel)
                   );
                 })
               )}

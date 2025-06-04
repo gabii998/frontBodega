@@ -9,7 +9,7 @@ export interface Quarter {
     encargadoNombre?: string | null;
     superficieTotal?: number;
     hileras?:number;
-    sistema?: 'parral' | 'espaldero' | null;
+    sistema?: 'Parral' | 'Espaldero' | null;
   }
 
   export const createQuarterBase = (): Quarter => ({
@@ -19,7 +19,7 @@ export interface Quarter {
     encargadoNombre: null,
     fincaId:-1,
     superficieTotal: 0,
-    sistema: 'parral',
+    sistema: 'Parral',
     hileras:0
   });
   
