@@ -235,7 +235,7 @@ const ReportsTable = () => {
 
   const itemReporteGeneral = (cuartel:ReporteResponse) => {
 
-    return (<div key="general">
+    return (<div key={cuartel.nombre}>
       {/* Fila del cuartel */}
       <div
         className={`hover:bg-gray-50 flex border-b border-gray-200`}
@@ -268,7 +268,7 @@ const ReportsTable = () => {
         </div>
         <div className="px-6 py-4 w-1/6">
           <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
-            -
+          {cuartel.rendimiento != null ? (cuartel.rendimiento + ' qq/Ha') : "-"}
           </span>
         </div>
         <div className="px-6 py-4 w-1/6">

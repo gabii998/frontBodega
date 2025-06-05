@@ -104,7 +104,7 @@ const WorkdayModal = ({
       let variedad;
       
       if (formData.variedadId && varieties) {
-        variedad = varieties.find(v => v.id === formData.variedadId);
+        variedad = varieties.find(v => v.idVariedad === formData.variedadId);
       }
       
       const workdayToSave: Workday = {
@@ -276,7 +276,7 @@ const WorkdayModal = ({
                 >
                   <option value="">Seleccione una variedad</option>
                   {varieties.map(variedad => (
-                    <option key={variedad.id} value={variedad.id}>
+                    <option key={variedad.idVariedad} value={variedad.idVariedad}>
                       {variedad.nombre}
                     </option>
                   ))}

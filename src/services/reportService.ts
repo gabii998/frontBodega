@@ -11,36 +11,45 @@ export const reportService = {
     return response.data;
   },
 
-  async getIndicadores(report:ReporteResponse): Promise<IndicadoresDto> {
-    const endpoint = report.tipoReporte === 'GENERAL' ? `/api/reportes/anio/${report.anio}/indicadores`:
-    (report.tipoReporte === 'VARIEDAD'
-      ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/indicadores`
-      : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/indicadores`);
-    
+  async getIndicadores(report: ReporteResponse): Promise<IndicadoresDto> {
+    const endpoint = `${this.getUrl(report)}/indicadores`;
     const response = await axios.get<IndicadoresDto>(endpoint);
     return response.data;
   },
 
   async updateIndicadores(
-    report:ReporteResponse,
+    report: ReporteResponse,
     indicadores: IndicadoresDto,
   ): Promise<IndicadoresDto> {
-    const endpoint = report.id
-      ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/indicadores`
-      : `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/indicadores`;
-    
-    const response = await axios.put<IndicadoresDto>(endpoint, indicadores);
+    const url = `${this.getUrl(report)}/indicadores`;
+    const response = await axios.put<IndicadoresDto>(url, indicadores);
     return response.data;
   },
 
   async getVariedadDetalle(
-    report:ReporteResponse
+    report: ReporteResponse
   ): Promise<DetalleVariedad> {
-    const endpoint = report.tipoReporte === 'GENERAL' ? `/api/reportes/anio/${report.anio}/detalle` : 
-    (report.tipoReporte === 'VARIEDAD'
-    ? `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}/detalle`
-    : `/api/reportes/anio/${report.anio}/cuartel/${report.id}/detalle`)
+    const endpoint = `${this.getUrl(report)}/detalle`;
     const response = await axios.get<DetalleVariedad>(endpoint);
     return response.data;
+  },
+  getUrl(report:ReporteResponse):string {
+    switch (report.tipoReporte) {
+      case 'GENERAL':
+        return `/api/reportes/anio/${report.anio}`
+      case 'VARIEDAD':
+        return `/api/reportes/anio/${report.anio}/cuartel/${report.cuartel?.id}/variedad/${report.id}`
+    
+      case 'CUARTEL':
+        return `/api/reportes/anio/${report.anio}/cuartel/${report.id}`
+       
+      case 'ESPALDERO':
+        return `/api/reportes/anio/${report.anio}/espaldero`
+
+      case 'PARRAL':
+        return `/api/reportes/anio/${report.anio}/parral`
+      default:
+        return ''
+    }
   }
 };

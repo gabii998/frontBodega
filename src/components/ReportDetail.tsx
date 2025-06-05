@@ -203,12 +203,9 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           </button>
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">
+              {report.nombre}
+              {report.tipoReporte == 'VARIEDAD' && ' - '}
               {report.cuartel?.nombre} 
-              {report.tipoReporte === 'VARIEDAD' && report.nombre && (
-                <span className="text-lg font-normal ml-2">
-                  - {report.nombre}
-                </span>
-              )}
             </h2>
             <p className="text-gray-500">
               Reporte del año {report.anio}
@@ -251,7 +248,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div>
               <p className="text-sm font-medium text-gray-500">Total Jornales</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {detalleVariedad?.jornalesTotales.toFixed(2)}
+                {(detalleVariedad?.jornalesTotales ?? 0).toFixed(2)}
               </p>
             </div>
           </div>

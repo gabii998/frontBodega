@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Leaf } from 'lucide-react';
+import { Plus, Edit, Trash2, Grape } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import Toast from './Toast';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
@@ -77,7 +77,7 @@ const VarietyTable = () => {
   const tableContentBody = (variety: Variety,) => {
     return [
       <div className="flex items-center">
-        <Leaf className="h-5 w-5 text-green-500 mr-2" />
+        <Grape className="h-5 w-5 text-indigo-500 mr-2" />
         <span>{variety.nombre}</span>
       </div>,
       <div className="flex space-x-3">
