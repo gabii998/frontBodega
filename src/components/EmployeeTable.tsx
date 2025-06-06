@@ -78,8 +78,8 @@ const EmployeeTable = () => {
   const tableContent = (employee: Employee,): ReactNode[] => {
     return [
       employee.nombre,
-      employee.dni,
-      <div className="flex space-x-3">
+      <div className='text-center'>{employee.dni}</div>,
+      <div className="flex space-x-3 justify-end">
         <button
           onClick={() => handleOpenModal(employee)}
           className="edit-button"

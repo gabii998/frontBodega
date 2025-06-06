@@ -10,8 +10,10 @@ import { generateReportPDF } from '../utils/pdfGenerator';
 import { reportService } from '../services/reportService';
 import IndicadoresDto, { createIndicadores } from '../model/IndicadoresDto';
 import TareaJornal from '../model/TareaJornal';
+import { useFarm } from '../context/FarmContext';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
+  const { activeFarm } = useFarm();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [toast, setToast] = useState<ToastProps | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,7 +47,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const fetchIndicadores = async () => {
     setIsLoading(true);
     try {
-      const response = await reportService.getIndicadores(report);
+      const response = await reportService.getIndicadores(report,activeFarm?.id ?? -1);
       setGeneralSummary(response);
     } catch {
       setToast(errorToast('Error al cargar los indicadores'));
@@ -57,7 +59,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const fetchDetalleVariedad = async () => {
     setIsLoading(true);
     try {
-      const response = await reportService.getVariedadDetalle(report);
+      const response = await reportService.getVariedadDetalle(report,activeFarm?.id ?? -1);
       setDetalleVariedad(response);
     } catch {
       setToast(errorToast('No se pudieron cargar los datos detallados de la variedad'));
@@ -69,7 +71,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const handleSaveSummary = async (newSummary: IndicadoresDto) => {
     setIsLoading(true);
     try {
-      const response = await reportService.updateIndicadores(report,newSummary);
+      const response = await reportService.updateIndicadores(report,newSummary,activeFarm?.id ?? -1);
       if (response) {
         setGeneralSummary(newSummary);
         setToast(successToast('Indicadores actualizados correctamente'));

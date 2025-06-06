@@ -90,10 +90,10 @@ const TaskTable = () => {
         <ClipboardList className="h-5 w-5 text-gray-400 mr-2" />
         {task.nombre}
       </div>,
-      <div className="flex">
+      <div className="flex justify-center">
         {getTypeLabel(task.tipo)}
       </div>,
-      <div className="flex space-x-3">
+      <div className="flex space-x-3 justify-end">
         <button
           onClick={() => {
             setSelectedTask(task);

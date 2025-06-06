@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, Home, Settings, FileText, MapPin, ClipboardList, LogOut, Grape } from 'lucide-react';
+import { Users, Home , FileText, MapPin, ClipboardList, LogOut, Grape } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -84,18 +84,6 @@ const Sidebar = () => {
              <Grape className="h-5 w-5 mr-3" />
              <span>Variedades de Uva</span>
            </NavLink>
-          
-          <NavLink 
-            to="/settings"
-            className={({ isActive }) => `flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-all duration-300 w-full text-left ${
-              isActive 
-                ? 'bg-gray-700 text-white shadow-lg transform scale-105' 
-                : ''
-            }`}
-          >
-            <Settings className="h-5 w-5 mr-3" />
-            <span>Configuración</span>
-          </NavLink>
           
           <button 
             onClick={handleLogout}

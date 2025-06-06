@@ -11,12 +11,25 @@ const Table = <T,>({ header, emptyMessage, data, content, rowClick = () => { } }
     return <table className="min-w-full">
         <thead>
             <tr className="bg-gray-50">
-                {header.map((h, index) => (
-                    <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {h}
-                    </th>
-                ))}
+                {header.map((h, index) => {
+                    const alignmentClass =
+                        index === 0
+                            ? 'text-left'
+                            : index === header.length - 1
+                                ? 'text-right'
+                                : 'text-center';
+
+                    return (
+                        <th
+                            key={index}
+                            className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${alignmentClass}`}
+                        >
+                            {h}
+                        </th>
+                    );
+                })}
             </tr>
+
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
             {data.length == 0 ? (

@@ -116,11 +116,11 @@ const QuarterTable = () => {
         <Map className="h-5 w-5 text-gray-400 mr-2" />
         {quarter.nombre}
       </div>,
-      getSystemIcon(quarter.sistema),
-      quarter.encargadoNombre,
-      `${quarter.superficieTotal} ha`,
-      quarter.hileras,
-      <div className="flex space-x-3">
+      <div className='text-center'>{getSystemIcon(quarter.sistema)}</div>,
+      <div className='text-center'>{quarter.encargadoNombre}</div>,
+      <div className='text-center'>{quarter.superficieTotal} ha</div>,
+      <div className='text-center'>{quarter.hileras}</div>,
+      <div className="flex space-x-3 justify-end">
         <button
           onClick={(e) => {
             e.stopPropagation();

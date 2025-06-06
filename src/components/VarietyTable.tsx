@@ -80,7 +80,7 @@ const VarietyTable = () => {
         <Grape className="h-5 w-5 text-indigo-500 mr-2" />
         <span>{variety.nombre}</span>
       </div>,
-      <div className="flex space-x-3">
+      <div className="flex space-x-3 justify-end">
         <button
           onClick={() => {
             setSelectedVariety(variety);
