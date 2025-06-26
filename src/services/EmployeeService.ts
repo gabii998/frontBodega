@@ -2,12 +2,13 @@ import axios from 'axios';
 import {Employee} from '../model/Employee';
 
 export const employeeService = {
-  async getAll(): Promise<Employee[]> {
-    const response = await axios.get<Employee[]>('/api/empleados');
+  async getAll(fincaId:number): Promise<Employee[]> {
+    const response = await axios.get<Employee[]>(`/api/empleados/finca/${fincaId}`);
     return response.data;
   },
 
-  async create(employee: Omit<Employee, 'id'>): Promise<Employee> {
+  async create(employee: Omit<Employee, 'id'>,fincaId:number): Promise<Employee> {
+    employee.fincaId = fincaId;
     try {
       const response = await axios.post<Employee>('/api/empleados',employee);
       return response.data;
@@ -17,7 +18,8 @@ export const employeeService = {
     }
   },
 
-  async update(id: number, employee: Omit<Employee, 'id'>): Promise<Employee> {
+  async update(id: number, employee: Omit<Employee, 'id'>,fincaId:number): Promise<Employee> {
+    employee.fincaId = fincaId;
     const response = await axios.put<Employee>(`/api/empleados/${id}`,employee);
     return response.data;
   },

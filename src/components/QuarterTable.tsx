@@ -59,7 +59,7 @@ const QuarterTable = () => {
     try {
       const varietiesResponse = await await varietyService.getAll();
       setAvailableVarieties(varietiesResponse);
-      const employeesResponse = await employeeService.getAll();
+      const employeesResponse = await employeeService.getAll(activeFarm?.id ?? 0);
       setAvailableEmployees(employeesResponse);
     } catch {
       errorToast('Error al cargar variedades o empleados');
@@ -104,9 +104,11 @@ const QuarterTable = () => {
 
   const getSystemIcon = (system: Quarter['sistema']) => {
     if (system === 'Parral') {
-      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Parral</span>;
-    } else {
-      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Espaldero</span>;
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-green-800">Parral</span>;
+    } else if (system === 'Espaldero'){
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-blue-800">Espaldero</span>;
+    }else {
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-blue-800">Olivo</span>;
     }
   };
 
@@ -157,7 +159,16 @@ const QuarterTable = () => {
       )}
 
       <div className="content">
-        <Title title='Cuarteles'/>
+        <div className='flex'>
+          <Title title='Cuarteles'/>
+        <button
+          onClick={() => {
+            navigate(`/structure`);
+          }}
+          className="ml-2 secondary-toolbar-button">
+          Estructura General
+        </button>
+        </div>
         <button
           onClick={() => {
             setSelectedQuarter(null);
@@ -181,7 +192,7 @@ const QuarterTable = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Table
             header={["Nombre", "Sistema", "Encargado", "Superficia (ha)", "Hileras", "Acciones"]}
-            emptyMessage='No hay cuarteles registrados'
+            emptyMessage={() => 'No hay cuarteles registrados'}
             data={quarters}
             rowClick={(q) => handleQuarterClick(q.id)}
             content={tableContent} />
@@ -198,6 +209,7 @@ const QuarterTable = () => {
           onSave={handleSaveQuarter}
           quarter={selectedQuarter || undefined}
           isLoading={isLoading}
+          setAvailableVarieties={setAvailableVarieties}
           availableVarieties={availableVarieties}
           availableEmployees={availableEmployees}
           activeFarmId={activeFarm?.id ?? -1}

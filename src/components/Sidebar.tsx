@@ -15,17 +15,6 @@ const Sidebar = () => {
     <div className="w-64 bg-gray-800 h-screen fixed left-0 top-16">
       <nav className="mt-6">
         <div className="px-6">
-          <NavLink 
-            to="/home"
-            className={({ isActive }) => `flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-all duration-300 w-full text-left ${
-              isActive 
-                ? 'bg-gray-700 text-white shadow-lg transform scale-105' 
-                : ''
-            }`}
-          >
-            <Home className="h-5 w-5 mr-3" />
-            <span>Inicio</span>
-          </NavLink>
           
           <NavLink 
             to="/employees"

@@ -14,6 +14,7 @@ const QuarterModal = ({
   onSave,
   quarter,
   isLoading = false,
+  setAvailableVarieties,
   availableVarieties,
   availableEmployees }: QuarterModalProps) => {
   const { activeFarm } = useFarm();
@@ -123,8 +124,9 @@ const QuarterModal = ({
       const response = await varietyService.create(newVarietyName);
       setFormData({
         ...formData,
-        variedades: [...formData.variedades, response]
+        variedades: [...formData.variedades, {nombre:response.nombre,idVariedad:response.id}]
       });
+      setAvailableVarieties([...availableVarieties,response])
       setNewVarietyName('');
       setShowNewVarietyForm(false);
       setErrors({
@@ -295,12 +297,13 @@ const QuarterModal = ({
                   </label>
                   <select
                     value={formData.sistema ?? ""}
-                    onChange={(e) => setFormData({ ...formData, sistema: e.target.value as 'Parral' | 'Espaldero' })}
+                    onChange={(e) => setFormData({ ...formData, sistema: e.target.value as 'Parral' | 'Espaldero' | 'Olivo' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     disabled={isLoading}
                   >
-                    <option value="parral">Parral</option>
-                    <option value="espaldero">Espaldero</option>
+                    <option value="Parral">Parral</option>
+                    <option value="Espaldero">Espaldero</option>
+                    <option value="Olivo">Olivo</option>
                   </select>
                 </div>
 
@@ -357,7 +360,7 @@ const QuarterModal = ({
                   <Table
                     header={["Variedad", "Superficie (ha)", "Hileras", "Acciones"]}
                     data={formData.variedades}
-                    emptyMessage='No hay variedades agregadas'
+                    emptyMessage={() => 'No hay variedades agregadas'}
                     content={(variety,) => tableBody(variety)}
                   />
                 </div>

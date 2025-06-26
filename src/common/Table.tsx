@@ -1,7 +1,7 @@
 
 interface TableProps<T> {
     header: string[],
-    emptyMessage: string,
+    emptyMessage: () => React.ReactNode,
     data: T[],
     content: (entity: T, index: number) => React.ReactNode[],
     rowClick?: (entity: T) => void
@@ -34,8 +34,8 @@ const Table = <T,>({ header, emptyMessage, data, content, rowClick = () => { } }
         <tbody className="bg-white divide-y divide-gray-200">
             {data.length == 0 ? (
                 <tr>
-                    <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
-                        {emptyMessage}
+                    <td colSpan={header.length} className="px-6 py-4 text-center text-gray-500">
+                        {emptyMessage()}
                     </td>
                 </tr>
             ) : (

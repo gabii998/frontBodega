@@ -79,9 +79,9 @@ const LoginPage = () => {
           </button>
         </form>
         
-        <p className="mt-4 text-sm text-gray-600 text-center">
+        {/* <p className="mt-4 text-sm text-gray-600 text-center">
           Usuario: admin@bodega.com | Contraseña: admin123
-        </p>
+        </p> */}
       </div>
     </div>
   );

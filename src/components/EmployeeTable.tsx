@@ -10,8 +10,10 @@ import { employeeService } from '../services/employeeService';
 import Table from '../common/Table';
 import Title from '../common/Title';
 import ErrorBanner from '../common/ErrorBanner';
+import { useFarm } from '../context/FarmContext';
 
 const EmployeeTable = () => {
+  const {activeFarm} = useFarm();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>();
@@ -21,14 +23,14 @@ const EmployeeTable = () => {
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [activeFarm]);
 
   const fetchEmployees = async () => {
     apiCall({
       setLoading: setIsLoading,
       setError: setError,
       onSuccess: setEmployees,
-      serverCall: employeeService.getAll(),
+      serverCall: employeeService.getAll(activeFarm?.id ?? 0),
       errorMessage: 'No se pudieron cargar los empleados. Por favor, intente de nuevo.'
     })
   };
@@ -40,14 +42,14 @@ const EmployeeTable = () => {
 
   const onEmployeeSaved = (data: Employee, isEdit: boolean) => {
     setEmployees(isEdit ? employees.map(emp => emp.id === selectedEmployee?.id ? data : emp) : [...employees, data]);
-    setToast(successToast('Empleado'+(isEdit ? 'actualizado' : 'creado')+'correctamente'));
+    setToast(successToast('Empleado '+(isEdit ? 'actualizado' : 'creado')+' correctamente'));
     setIsModalOpen(false);
     setSelectedEmployee(undefined);
   }
 
   const handleSaveEmployee = async (employeeData: Employee) => {
     const isEdit = Boolean(selectedEmployee?.id);
-    const call = isEdit ? employeeService.update(selectedEmployee?.id ?? -1, employeeData) : employeeService.create(employeeData);
+    const call = isEdit ? employeeService.update(selectedEmployee?.id ?? -1, employeeData,activeFarm?.id ?? 0) : employeeService.create(employeeData,activeFarm?.id ?? 0);
     apiCall({
         setLoading: setIsLoading,
         setError: setError,
@@ -129,7 +131,7 @@ const EmployeeTable = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Table
             header={["Nombre", "DNI", "Acciones"]}
-            emptyMessage='No hay empleados registrados'
+            emptyMessage={() => 'No hay empleados registrados'}
             data={employees}
             content={tableContent}
           />

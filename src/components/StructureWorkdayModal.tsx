@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
+import { X, Calendar, User, ClipboardList, XCircle } from 'lucide-react';
 import Workday from '../model/Workday';
-import WorkdayModalProps from '../model/WorkdayModalProps';
 import { createPortal } from 'react-dom';
+import StructureWorkdayModalProps from '../model/StructureWorkdayModalProps';
 
-const WorkdayModal = ({ 
+const StructureWorkdayModal = ({ 
   isOpen, 
   onClose, 
   onSave,
   workday,
   employees, 
-  tasks,
-  quarterName,
-  quarterId,
-  varieties = []
-}: WorkdayModalProps) => {
+  tasks
+}: StructureWorkdayModalProps) => {
   const [formData, setFormData] = useState<Workday>({
     fecha: new Date().toISOString().split('T')[0],
     jornales: 1,
@@ -25,7 +22,7 @@ const WorkdayModal = ({
     variedadId: undefined,
     variedadNombre: undefined,
     cuartelId: 0,
-    esEstructuraGeneral:false
+    esEstructuraGeneral:true
   });
 
   const [taskSearch, setTaskSearch] = useState('');
@@ -62,7 +59,7 @@ const WorkdayModal = ({
         variedadId: undefined,
         variedadNombre: undefined,
         cuartelId: 0,
-        esEstructuraGeneral:false
+        esEstructuraGeneral:true
       });
       setTaskSearch('');
       setShowTaskList(true); // Mostrar la lista de tareas para un nuevo jornal
@@ -103,18 +100,12 @@ const WorkdayModal = ({
       // Preparar los datos del empleado y tarea para mostrarlos en la tabla
       const employee = employees.find(e => e.id === formData.empleadoId);
       const task = tasks.find(t => t.id === formData.tareaId);
-      let variedad;
-      
-      if (formData.variedadId && varieties) {
-        variedad = varieties.find(v => v.idVariedad === formData.variedadId);
-      }
       
       const workdayToSave: Workday = {
         ...formData,
         empleadoNombre: employee ? employee.nombre : formData.empleadoNombre,
         tareaNombre: task ? task.nombre : formData.tareaNombre,
-        variedadNombre: variedad ? variedad.nombre : formData.variedadNombre,
-        cuartelId: quarterId,
+        esEstructuraGeneral: true
       };
       
       onSave(workdayToSave);
@@ -151,9 +142,6 @@ const WorkdayModal = ({
         <h2 className="text-xl font-semibold mb-4">
           {workday ? 'Editar Jornal' : 'Registrar Jornal'}
         </h2>
-        <p className="text-gray-500 mb-4">
-          Cuartel: {quarterName}
-        </p>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -243,52 +231,6 @@ const WorkdayModal = ({
               <p className="mt-1 text-sm text-red-500">{errors.employeeId}</p>
             )}
           </div>
-
-          {/* Selección de variedad */}
-          {varieties && varieties.length > 0 && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Variedad de Uva
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Droplet className="h-5 w-5 text-gray-400" />
-                </div>
-                <select
-                  required
-                  value={formData.variedadId !== undefined ? formData.variedadId : ''}
-                  onChange={(e) => {
-                    const select = e.target;
-                    const value = select.value;
-                    if (value) {
-                      setFormData({
-                        ...formData,
-                        variedadId: Number(value),
-                        variedadNombre: select.options[select.selectedIndex].text
-                      });
-                    } else {
-                      setFormData({
-                        ...formData,
-                        variedadId: undefined,
-                        variedadNombre: undefined
-                      });
-                    }
-                  }}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Seleccione una variedad</option>
-                  {varieties.map(variedad => (
-                    <option key={variedad.idVariedad} value={variedad.idVariedad}>
-                      {variedad.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Seleccione la variedad de uva específica para este jornal.
-              </p>
-            </div>
-          )}
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -390,4 +332,4 @@ const WorkdayModal = ({
   );
 };
 
-export default WorkdayModal;
+export default StructureWorkdayModal;

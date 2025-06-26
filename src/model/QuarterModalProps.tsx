@@ -8,6 +8,7 @@ export default interface QuarterModalProps {
     onSave: (quarter: Quarter) => void;
     quarter?: Quarter;
     isLoading?: boolean;
+    setAvailableVarieties:(varieties:Variety[]) => void,
     availableVarieties: Variety[];
     availableEmployees: Employee[];
     activeFarmId: number;

@@ -8,5 +8,6 @@ export default interface Workday {
     tareaNombre: string;
     variedadId?: number;
     variedadNombre?: string;
-    cuartelId:number
+    cuartelId:number;
+    esEstructuraGeneral:boolean;
 }

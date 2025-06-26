@@ -13,6 +13,7 @@ import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import { taskService } from '../services/TaskService';
 import { workdayService } from '../services/WorkdayService';
 import Title from '../common/Title';
+import { useFarm } from '../context/FarmContext';
 
 const mapApiWorkday = (apiWorkday: Workday): Workday => {
   const fechaFormateada = apiWorkday.fecha ? apiWorkday.fecha.split('T')[0] : '';
@@ -22,6 +23,7 @@ const mapApiWorkday = (apiWorkday: Workday): Workday => {
 
 const QuarterWorkdays = () => {
   const { id } = useParams();
+  const { activeFarm} = useFarm();
   const navigate = useNavigate();
   const [workdays, setWorkdays] = useState<Workday[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,7 +52,7 @@ const QuarterWorkdays = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await employeeService.getAll();
+      const response = await employeeService.getAll(activeFarm?.id ?? 0);
       setEmployees(response);
     } catch {
       setToast(errorToast('Error al obtener los empleados.'));
