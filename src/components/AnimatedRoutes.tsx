@@ -12,6 +12,7 @@ import Sidebar from './Sidebar';
 import LoadingScreen from './LoadingScreen';
 import VarietyTable from './VarietyTable';
 import StructureTable from './StrcutureTable';
+import JornalesNoProductivos from './JornalesNoProductivos';
 
 
 
@@ -73,6 +74,7 @@ const AnimatedRoutes = () => {
               <Route path="/tasks" element={<TaskTable />} />
               <Route path="/reports" element={<ReportsTable />} />
               <Route path="/varieties" element={<VarietyTable />} />
+              <Route path="/noProductivos" element={<JornalesNoProductivos />} />
               <Route path="*" element={<Navigate to="/employees" replace />} />
             </Routes>
           </div>

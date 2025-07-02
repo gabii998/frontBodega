@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Workday from '../model/Workday';
+import {Workday} from '../model/Workday';
 
 export const workdayService = {
   async getByQuarter(quarterId: string): Promise<Workday[]> {

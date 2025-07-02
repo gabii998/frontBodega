@@ -137,7 +137,7 @@ const VarietyTable = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Table
             header={["Nombre", "Acciones"]}
-            emptyMessage='No hay variedades registradas'
+            emptyMessage={() => 'No hay variedades registradas'}
             data={varieties}
             content={tableContentBody}
           />

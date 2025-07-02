@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
-import Workday from '../model/Workday';
+import {defaultWorkday, Workday} from '../model/Workday';
 import WorkdayModalProps from '../model/WorkdayModalProps';
 import { createPortal } from 'react-dom';
 
@@ -15,19 +15,7 @@ const WorkdayModal = ({
   quarterId,
   varieties = []
 }: WorkdayModalProps) => {
-  const [formData, setFormData] = useState<Workday>({
-    fecha: new Date().toISOString().split('T')[0],
-    jornales: 1,
-    empleadoId: 0,
-    empleadoNombre: '',
-    tareaId: 0,
-    tareaNombre: '',
-    variedadId: undefined,
-    variedadNombre: undefined,
-    cuartelId: 0,
-    esEstructuraGeneral:false
-  });
-
+  const [formData, setFormData] = useState<Workday>(defaultWorkday());
   const [taskSearch, setTaskSearch] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showTaskList, setShowTaskList] = useState(false); // Estado para controlar la visibilidad de la lista de tareas
@@ -52,18 +40,7 @@ const WorkdayModal = ({
       setShowTaskList(false);
     } else {
       // Valores por defecto para un nuevo jornal
-      setFormData({
-        fecha: new Date().toISOString().split('T')[0],
-        jornales: 1,
-        empleadoId: 0,
-        empleadoNombre: '',
-        tareaId: 0,
-        tareaNombre: '',
-        variedadId: undefined,
-        variedadNombre: undefined,
-        cuartelId: 0,
-        esEstructuraGeneral:false
-      });
+      setFormData(defaultWorkday());
       setTaskSearch('');
       setShowTaskList(true); // Mostrar la lista de tareas para un nuevo jornal
     }

@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Edit, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import Title from "../common/Title";
 import Toast from "./Toast";
@@ -13,6 +13,9 @@ import { Employee } from "../model/Employee";
 import { employeeService } from "../services/employeeService";
 import { taskService } from "../services/TaskService";
 import { useNavigate } from "react-router-dom";
+import TableTitle from "../common/TableTitle";
+import TableShimmer from "./TableShimmer";
+import { DeleteIcon, EditIcon } from "../common/IconButtons";
 
 const StructureTable = () => {
     const navigate = useNavigate();
@@ -47,6 +50,7 @@ const StructureTable = () => {
 
     const fetchWorkdays = async () => {
         try {
+            setIsLoading(true);
             const response = await workdayService.getStructureByYear(activeFarm?.id ?? 0);
             setWorkdays(response);
         } catch {
@@ -116,18 +120,14 @@ const StructureTable = () => {
                 </span>
                 </div>,
             <div className="flex space-x-2 justify-end">
-                <button
+                <EditIcon
                     onClick={() => handleEditWorkday(w)}
-                    className="edit-button"
-                    title="Editar jornal">
-                    <Edit className="h-5 w-5" />
-                </button>
-                <button
+                    label="Editar jornal"
+                />
+                <DeleteIcon
                     onClick={() => handleDeleteWorkday(w.id!)}
-                    className="delete-button"
-                    title="Eliminar jornal">
-                    <Trash2 className="h-5 w-5" />
-                </button>
+                    label="Eliminar jornal"
+                />
             </div>
         ];
     }
@@ -182,7 +182,7 @@ const StructureTable = () => {
                 />
             )}
 
-            <StructureTableTitle handleBack={handleBack} onAddWorkday={onAddWorkday} />
+            <TableTitle handleBack={handleBack} onAddWorkday={onAddWorkday} title="Estructura General" />
 
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <Table
@@ -209,34 +209,6 @@ const StructureTable = () => {
 
 }
 
-const StructureTableTitle = ({ handleBack, onAddWorkday }: { handleBack: () => void, onAddWorkday: () => void }) => {
-    return (<div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-            <button
-                onClick={handleBack}
-                className="text-gray-600 hover:text-gray-800"
-            >
-                <ArrowLeft className="h-6 w-6" />
-            </button>
-            <div>
-                <Title title="Estructura general" />
-                {/* {quarter.superficieTotal && (
-                            <p className="text-sm text-gray-500">
-                                Superficie: {quarter.superficieTotal} hectáreas
-                            </p>
-                        )} */}
-            </div>
-        </div>
-        <button
-            onClick={() => onAddWorkday()}
-            className="toolbar-button"
-        >
-            <Plus className="h-5 w-5 mr-2" />
-            Nuevo Jornal
-        </button>
-    </div>)
-}
-
 const Loading = ({ handleBack }: { handleBack: () => void }) => {
     return (
         <div className="p-6">
@@ -249,10 +221,7 @@ const Loading = ({ handleBack }: { handleBack: () => void }) => {
                 </button>
                 <Title title='Cargando...' />
             </div>
-            <div className="bg-white rounded-lg shadow p-6 animate-pulse">
-                <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-            </div>
+            <TableShimmer columns={[30, 20, 15, 20, 15]} rows={4} />
         </div>
     );
 }

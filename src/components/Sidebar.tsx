@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, Home , FileText, MapPin, ClipboardList, LogOut, Grape } from 'lucide-react';
+import { Users , FileText, MapPin, ClipboardList, LogOut, Grape, CalendarX } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -14,7 +14,7 @@ const Sidebar = () => {
   return (
     <div className="w-64 bg-gray-800 h-screen fixed left-0 top-16">
       <nav className="mt-6">
-        <div className="px-6">
+        <div className="px-0 pr-2">
           
           <NavLink 
             to="/employees"
@@ -72,6 +72,16 @@ const Sidebar = () => {
            >
              <Grape className="h-5 w-5 mr-3" />
              <span>Variedades de Uva</span>
+           </NavLink>
+
+           <NavLink 
+             to="/noProductivos"
+             className={({ isActive }) => `flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-all duration-300 w-full text-left ${
+               isActive ? 'bg-gray-700 text-white shadow-lg transform scale-105'  : ''
+             }`}
+           >
+             <CalendarX className="h-5 w-5 mr-3" />
+             <span>Jornales no productivos</span>
            </NavLink>
           
           <button 

@@ -1,8 +1,8 @@
 // src/config/axios.ts
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:8080';
-//axios.defaults.baseURL = 'https://api-bodega.ascurra-soluciones.com';
+//axios.defaults.baseURL = 'http://localhost:8080';
+axios.defaults.baseURL = 'https://api-bodega.ascurra-soluciones.com';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Interceptor para agregar el token automáticamente a las solicitudes
