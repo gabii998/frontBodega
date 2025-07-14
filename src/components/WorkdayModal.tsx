@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, User, ClipboardList, Droplet, XCircle } from 'lucide-react';
 import {defaultWorkday, Workday} from '../model/Workday';
 import WorkdayModalProps from '../model/WorkdayModalProps';
@@ -19,6 +19,26 @@ const WorkdayModal = ({
   const [taskSearch, setTaskSearch] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showTaskList, setShowTaskList] = useState(false); // Estado para controlar la visibilidad de la lista de tareas
+
+  const dateRef = useRef<HTMLInputElement>(null);
+  const jornalesRef = useRef<HTMLInputElement>(null);
+  const employeeRef = useRef<HTMLSelectElement>(null);
+  const varietyRef = useRef<HTMLSelectElement>(null);
+  const taskRef = useRef<HTMLInputElement>(null);
+
+  const focusNext = (ref?: React.RefObject<HTMLElement>) => {
+    ref?.current?.focus();
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    next?: React.RefObject<HTMLElement>
+  ) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      focusNext(next);
+    }
+  };
   
   // Filtrar tareas basado en búsqueda
   const filteredTasks = tasks.filter(task => 
@@ -143,8 +163,15 @@ const WorkdayModal = ({
               </div>
               <input
                 type="date"
+                ref={dateRef}
                 value={formData.fecha}
-                onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
+                onKeyDown={(e) => handleKeyDown(e, jornalesRef)}
+                onChange={(e) => {
+                  setFormData({ ...formData, fecha: e.target.value });
+                  if (e.target.value) {
+                    focusNext(jornalesRef);
+                  }
+                }}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.date ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -162,9 +189,11 @@ const WorkdayModal = ({
             </label>
             <input
               type="number"
+              ref={jornalesRef}
               min="0.1"
               step="0.01"
               value={formData.jornales}
+              onKeyDown={(e) => handleKeyDown(e, employeeRef)}
               onChange={(e) => setFormData({ ...formData, jornales: parseFloat(e.target.value) })}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.jornales ? 'border-red-500' : 'border-gray-300'
@@ -185,7 +214,14 @@ const WorkdayModal = ({
                 <User className="h-5 w-5 text-gray-400" />
               </div>
               <select
+                ref={employeeRef}
                 value={formData.empleadoId || ''}
+                onKeyDown={(e) =>
+                  handleKeyDown(
+                    e,
+                    varieties && varieties.length > 0 ? varietyRef : taskRef
+                  )
+                }
                 onChange={(e) => {
                   const select = e.target;
                   const value = select.value;
@@ -193,7 +229,8 @@ const WorkdayModal = ({
                     setFormData({
                       ...formData,
                       empleadoId: Number(value),
-                      empleadoNombre: select.options[select.selectedIndex].text
+                      empleadoNombre:
+                        select.options[select.selectedIndex].text
                     });
                   } else {
                     setFormData({
@@ -202,6 +239,9 @@ const WorkdayModal = ({
                       empleadoNombre: ''
                     });
                   }
+                  focusNext(
+                    varieties && varieties.length > 0 ? varietyRef : taskRef
+                  );
                 }}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.employeeId ? 'border-red-500' : 'border-gray-300'
@@ -232,8 +272,10 @@ const WorkdayModal = ({
                   <Droplet className="h-5 w-5 text-gray-400" />
                 </div>
                 <select
+                  ref={varietyRef}
                   required
                   value={formData.variedadId !== undefined ? formData.variedadId : ''}
+                  onKeyDown={(e) => handleKeyDown(e, taskRef)}
                   onChange={(e) => {
                     const select = e.target;
                     const value = select.value;
@@ -250,6 +292,7 @@ const WorkdayModal = ({
                         variedadNombre: undefined
                       });
                     }
+                    focusNext(taskRef);
                   }}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -299,7 +342,9 @@ const WorkdayModal = ({
                   </div>
                   <input
                     type="text"
+                    ref={taskRef}
                     value={taskSearch}
+                    onKeyDown={(e) => handleKeyDown(e)}
                     onChange={(e) => setTaskSearch(e.target.value)}
                     onClick={handleTaskSearchClick}
                     placeholder="Buscar tarea..."
