@@ -1,5 +1,5 @@
 import { Calendar, User, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Employee } from "../model/Employee";
 import JornalNoProductivo, { defaultJornalNp } from "../model/JornalNoProductivo";
@@ -13,7 +13,8 @@ const JornalNoProdModal = (
   }: { employees: Employee[], jornal: JornalNoProductivo | null, handleClose: () => void, onSubmit: (workday: JornalNoProductivo) => void }) => {
   const [formData, setFormData] = useState<JornalNoProductivo>(defaultJornalNp);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
+  const jornalesRef = useRef<HTMLInputElement>(null);
+  const employeeRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     if (jornal != null) {
@@ -28,6 +29,17 @@ const JornalNoProdModal = (
       onSubmit(formData);
     }
   }
+
+  const handleKeyDown = (
+      e: React.KeyboardEvent,
+      next?: React.RefObject<HTMLElement>
+    ) => {
+      if (e.key === 'Enter') {
+        console.log("enter")
+        e.preventDefault();
+        next?.current?.focus();
+      }
+    };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -76,6 +88,7 @@ const JornalNoProdModal = (
               <input
                 type="date"
                 value={formData.fecha}
+                onKeyDown={(e) => handleKeyDown(e, jornalesRef)}
                 onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.date ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -95,7 +108,9 @@ const JornalNoProdModal = (
               type="number"
               min="0"
               step="0.1"
+              ref={jornalesRef}
               value={formData.jornales}
+              onKeyDown={(e) => handleKeyDown(e, employeeRef)}
               onChange={(e) => setFormData({ ...formData, jornales: parseFloat(e.target.value) })}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.jornales ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -116,6 +131,7 @@ const JornalNoProdModal = (
               </div>
               <select
                 value={formData.idEmpleado || ''}
+                ref={employeeRef}
                 onChange={(e) => {
                   const select = e.target;
                   const value = select.value;

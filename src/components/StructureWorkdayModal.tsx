@@ -3,6 +3,7 @@ import { X, Calendar, User, ClipboardList, XCircle } from 'lucide-react';
 import Workday from '../model/Workday';
 import { createPortal } from 'react-dom';
 import StructureWorkdayModalProps from '../model/StructureWorkdayModalProps';
+import { useRef } from 'react';
 
 const StructureWorkdayModal = ({ 
   isOpen, 
@@ -28,27 +29,24 @@ const StructureWorkdayModal = ({
   const [taskSearch, setTaskSearch] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showTaskList, setShowTaskList] = useState(false); // Estado para controlar la visibilidad de la lista de tareas
+  const jornalesRef = useRef<HTMLInputElement>(null);
+  const employeeRef = useRef<HTMLSelectElement>(null);
+  const taskRef = useRef<HTMLInputElement>(null);
   
-  // Filtrar tareas basado en búsqueda
   const filteredTasks = tasks.filter(task => 
     task.nombre.toLowerCase().includes(taskSearch.toLowerCase()) ||
     (task.nombre && task.nombre.toLowerCase().includes(taskSearch.toLowerCase()))
   );
 
-  // Inicializar el formulario con los datos del jornal cuando se está editando
   useEffect(() => {
     if (workday) {
       setFormData(workday);
-      // Actualizar el campo de búsqueda de tareas cuando se edita
       const selectedTask = tasks.find(t => t.id === workday.tareaId);
       if (selectedTask) {
         setTaskSearch(selectedTask.nombre);
       }
-      
-      // No mostrar la lista de tareas al editar inicialmente
       setShowTaskList(false);
     } else {
-      // Valores por defecto para un nuevo jornal
       setFormData({
         fecha: new Date().toISOString().split('T')[0],
         jornales: 1,
@@ -62,7 +60,7 @@ const StructureWorkdayModal = ({
         esEstructuraGeneral:true
       });
       setTaskSearch('');
-      setShowTaskList(true); // Mostrar la lista de tareas para un nuevo jornal
+      setShowTaskList(true);
     }
   }, [workday, tasks]);
 
@@ -86,9 +84,6 @@ const StructureWorkdayModal = ({
     if (!formData.tareaId) {
       newErrors.taskId = 'Debe seleccionar una tarea';
     }
-    
-    // La variedad puede ser opcional dependiendo del contexto
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -97,7 +92,6 @@ const StructureWorkdayModal = ({
     e.preventDefault();
     
     if (validateForm()) {
-      // Preparar los datos del empleado y tarea para mostrarlos en la tabla
       const employee = employees.find(e => e.id === formData.empleadoId);
       const task = tasks.find(t => t.id === formData.tareaId);
       
@@ -112,7 +106,6 @@ const StructureWorkdayModal = ({
     }
   };
 
-  // Función para eliminar la tarea seleccionada
   const handleClearTask = () => {
     setFormData({
       ...formData,
@@ -123,10 +116,20 @@ const StructureWorkdayModal = ({
     setShowTaskList(true);
   };
 
-  // Manejar clic en el campo de búsqueda de tareas
   const handleTaskSearchClick = () => {
     setShowTaskList(true);
   };
+
+  const handleKeyDown = (
+      e: React.KeyboardEvent,
+      next?: React.RefObject<HTMLElement>
+    ) => {
+      if (e.key === 'Enter') {
+        console.log("enter")
+        e.preventDefault();
+        next?.current?.focus();
+      }
+    };
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -155,6 +158,7 @@ const StructureWorkdayModal = ({
               <input
                 type="date"
                 value={formData.fecha}
+                onKeyDown={(e) => handleKeyDown(e, jornalesRef)}
                 onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.date ? 'border-red-500' : 'border-gray-300'
@@ -173,9 +177,11 @@ const StructureWorkdayModal = ({
             </label>
             <input
               type="number"
+              ref={jornalesRef}
               min="0.1"
               step="0.01"
               value={formData.jornales}
+              onKeyDown={(e) => handleKeyDown(e, employeeRef)}
               onChange={(e) => setFormData({ ...formData, jornales: parseFloat(e.target.value) })}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.jornales ? 'border-red-500' : 'border-gray-300'
@@ -197,6 +203,7 @@ const StructureWorkdayModal = ({
               </div>
               <select
                 value={formData.empleadoId || ''}
+                ref={employeeRef}
                 onChange={(e) => {
                   const select = e.target;
                   const value = select.value;
@@ -213,6 +220,7 @@ const StructureWorkdayModal = ({
                       empleadoNombre: ''
                     });
                   }
+                  taskRef.current?.focus();
                 }}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.employeeId ? 'border-red-500' : 'border-gray-300'
@@ -264,6 +272,7 @@ const StructureWorkdayModal = ({
                   </div>
                   <input
                     type="text"
+                    ref={taskRef}
                     value={taskSearch}
                     onChange={(e) => setTaskSearch(e.target.value)}
                     onClick={handleTaskSearchClick}

@@ -35,6 +35,7 @@ const WorkdayModal = ({
     next?: React.RefObject<HTMLElement>
   ) => {
     if (e.key === 'Enter') {
+      console.log("enter")
       e.preventDefault();
       focusNext(next);
     }
@@ -168,9 +169,6 @@ const WorkdayModal = ({
                 onKeyDown={(e) => handleKeyDown(e, jornalesRef)}
                 onChange={(e) => {
                   setFormData({ ...formData, fecha: e.target.value });
-                  if (e.target.value) {
-                    focusNext(jornalesRef);
-                  }
                 }}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.date ? 'border-red-500' : 'border-gray-300'

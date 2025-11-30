@@ -120,7 +120,7 @@ const QuarterTable = () => {
       </div>,
       <div className='text-center'>{getSystemIcon(quarter.sistema)}</div>,
       <div className='text-center'>{quarter.encargadoNombre}</div>,
-      <div className='text-center'>{quarter.superficieTotal} ha</div>,
+      <div className='text-center'>{quarter.superficieTotal?.toFixed(2)} ha</div>,
       <div className='text-center'>{quarter.hileras}</div>,
       <div className="flex space-x-3 justify-end">
         <button

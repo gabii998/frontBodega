@@ -168,7 +168,7 @@ const ReportsTable = () => {
               <div className="font-medium text-gray-900">
                 {cuartel.nombre}
               </div>
-              <div className="text-sm text-gray-500">{cuartel.superficie} hectáreas</div>
+              <div className="text-sm text-gray-500">{cuartel.superficie.toFixed(2)} hectáreas</div>
             </div>
           </div>
         </div>
