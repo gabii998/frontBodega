@@ -20,6 +20,8 @@ import { DeleteIcon, EditIcon } from "../common/IconButtons";
 const StructureTable = () => {
     const navigate = useNavigate();
     const { activeFarm } = useFarm();
+    const currentYear = new Date().getFullYear();
+    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
     const [workdays, setWorkdays] = useState<Workday[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -30,28 +32,22 @@ const StructureTable = () => {
     const [selectedWorkday, setSelectedWorkday] = useState<Workday | null>(null);
 
     useEffect(() => {
-        loadData();
+        if (!activeFarm) return;
+        fetchEmployees();
+        fetchTasks();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeFarm])
+    }, [activeFarm]);
 
-    const loadData = async () => {
-        try {
-            await Promise.all([
-                fetchEmployees(),
-                fetchTasks()
-            ]);
-            await fetchWorkdays();
-        } catch (error) {
-            console.error("Error cargando datos:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!activeFarm) return;
+        fetchWorkdays(selectedYear);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeFarm, selectedYear]);
 
-    const fetchWorkdays = async () => {
+    const fetchWorkdays = async (year: number) => {
         try {
             setIsLoading(true);
-            const response = await workdayService.getStructureByYear(activeFarm?.id ?? 0);
+            const response = await workdayService.getStructureByYear(activeFarm?.id ?? 0, year);
             setWorkdays(response);
         } catch {
             setError('No se pudieron cargar los jornales de este cuartel');
@@ -183,6 +179,24 @@ const StructureTable = () => {
             )}
 
             <TableTitle handleBack={handleBack} onAddWorkday={onAddWorkday} title="Estructura General" />
+
+            <div className="flex items-center justify-end mb-4">
+                <label className="text-sm text-gray-600 mr-2" htmlFor="structure-year">
+                    Año
+                </label>
+                <select
+                    id="structure-year"
+                    className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+                    value={selectedYear}
+                    onChange={(event) => setSelectedYear(Number(event.target.value))}
+                >
+                    {Array.from({ length: 6 }, (_, index) => currentYear - index).map((year) => (
+                        <option key={year} value={year}>
+                            {year}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <Table

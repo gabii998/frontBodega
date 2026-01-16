@@ -9,8 +9,8 @@ export const workdayService = {
       fecha: workday.fecha.split('T')[0] 
     }));
   },
-  async getStructureByYear(idFarm:number): Promise<Workday[]> {
-    const response = await axios.get<Workday[]>(`/api/jornales/estructura/${new Date().getFullYear()}/finca/${idFarm}`);
+  async getStructureByYear(idFarm: number, year: number): Promise<Workday[]> {
+    const response = await axios.get<Workday[]>(`/api/jornales/estructura/${year}/finca/${idFarm}`);
     return response.data.map(workday => ({
       ...workday,
       fecha: workday.fecha.split('T')[0] 
