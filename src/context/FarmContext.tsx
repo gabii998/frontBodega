@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import Farm from '../model/Farm';
+import { useAuth } from './AuthContext';
 
 interface FarmContextType {
   activeFarm: Farm | null;
@@ -21,6 +22,7 @@ export const useFarm = () => {
 };
 
 export const FarmProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [activeFarm, setActiveFarm] = useState<Farm | null>(null);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,11 +62,17 @@ export const FarmProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Cargar las fincas al iniciar la aplicación
+  // Cargar las fincas cuando el usuario se autentica
   useEffect(() => {
-    loadFarms();
+    if (!authLoading && isAuthenticated) {
+      loadFarms();
+    } else if (!authLoading && !isAuthenticated) {
+      setFarms([]);
+      setActiveFarm(null);
+      setIsLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   // Guardar la finca activa en localStorage cuando cambie
   useEffect(() => {

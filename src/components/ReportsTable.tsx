@@ -59,7 +59,7 @@ const AnimatedVarietyRows = ({
           <div className="px-6 py-4 w-1/6">
             <div className="flex items-center text-gray-700">
               <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-              <span>{variety.anio}</span>
+              <span>{formatTemporada(variety.anio)}</span>
             </div>
           </div>
           <div className="px-6 py-4 text-gray-700 w-1/6">
@@ -99,18 +99,31 @@ const ReportsTable = () => {
   const [reports, setReports] = useState<ReporteResponse[]>([]);
   const [toast, setToast] = useState<ToastProps | null>(null);
   const [expandedQuartels, setExpandedQuartels] = useState<number[]>([]);
-  const currentYear = new Date().getFullYear();
-  const startYear = currentYear - 5;
-  const [anioSeleccionado, setAnioSeleccionado] = useState<number>(currentYear);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [anioSeleccionado, setAnioSeleccionado] = useState<number | null>(null);
 
   useEffect(() => {
-    if (activeFarm != null && activeFarm != undefined) {
-      fetchReports();
-    }
+    if (!activeFarm) return;
+    setAnioSeleccionado(null);
+    reportService.getAniosDisponibles(activeFarm.id).then(years => {
+      setAvailableYears(years);
+      if (years.length > 0) setAnioSeleccionado(years[0]);
+      else setIsLoading(false);
+    }).catch(() => {
+      setAvailableYears([]);
+      setIsLoading(false);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFarm]);
+
+  useEffect(() => {
+    if (!activeFarm || anioSeleccionado === null) return;
+    fetchReports();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anioSeleccionado, activeFarm]);
 
   const fetchReports = async () => {
+    if (anioSeleccionado === null) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -122,6 +135,11 @@ const ReportsTable = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatTemporada = (anio: string | number) => {
+    const y = parseInt(anio.toString());
+    return `${y} - ${y + 1}`;
   };
 
   const toggleExpansion = (cuartelId: number | null | undefined, e: React.MouseEvent) => {
@@ -175,7 +193,7 @@ const ReportsTable = () => {
         <div className="px-6 py-4 w-1/6">
           <div className="flex items-center">
             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-            <span>{cuartel.anio}</span>
+            <span>{formatTemporada(cuartel.anio)}</span>
           </div>
         </div>
         <div className="px-6 py-4 w-1/6">
@@ -256,7 +274,7 @@ const ReportsTable = () => {
         <div className="px-6 py-4 w-1/6">
           <div className="flex items-center">
             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
-            <span>{anioSeleccionado}</span>
+            <span>{anioSeleccionado !== null ? formatTemporada(anioSeleccionado) : ''}</span>
           </div>
         </div>
         <div className="px-6 py-4 w-1/6">
@@ -329,19 +347,19 @@ const ReportsTable = () => {
         <Title title='Reportes' />
         <div className="flex items-center">
           <select
-            value={anioSeleccionado}
+            value={anioSeleccionado ?? ''}
             onChange={(e) => setAnioSeleccionado(parseInt(e.target.value))}
             className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={availableYears.length === 0}
           >
-            {/* Generar opciones desde startYear hasta el año actual */}
-            {Array.from({ length: currentYear - startYear + 1 }, (_, index) => {
-              const year = startYear + index;
-              return (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              );
-            }).reverse()} {/* Invertimos para mostrar más recientes primero */}
+            {availableYears.length === 0 && (
+              <option value="">Sin datos disponibles</option>
+            )}
+            {availableYears.map(year => (
+              <option key={year} value={year}>
+                {formatTemporada(year)}
+              </option>
+            ))}
           </select>
 
           <button

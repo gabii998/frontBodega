@@ -4,6 +4,11 @@ import DetalleVariedad from '../model/DetalleVariedad';
 import { ReporteResponse } from '../model/ReporteCuartel';
 
 export const reportService = {
+  async getAniosDisponibles(fincaId: number): Promise<number[]> {
+    const response = await axios.get<number[]>(`/api/reportes/anios-disponibles/finca/${fincaId}`);
+    return response.data;
+  },
+
   async getByYear(year: number, fincaId: number): Promise<ReporteResponse[]> {
     const response = await axios.get<ReporteResponse[]>(
       `/api/reportes/anio/${year}/finca/${fincaId}`
