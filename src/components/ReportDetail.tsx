@@ -11,13 +11,14 @@ import { reportService } from '../services/reportService';
 import IndicadoresDto, { createIndicadores } from '../model/IndicadoresDto';
 import TareaJornal from '../model/TareaJornal';
 import { useFarm } from '../context/FarmContext';
+import TableShimmer from './TableShimmer';
 
 const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const { activeFarm } = useFarm();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [toast, setToast] = useState<ToastProps | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [generalSummary, setGeneralSummary] = useState<IndicadoresDto>(createIndicadores);
   const [detalleVariedad, setDetalleVariedad] = useState<DetalleVariedad | null>(null);
 
@@ -171,7 +172,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div className="flex justify-between items-center">
               <span className="font-medium text-gray-900 w-1/3">Total General:</span>
               <span className="text-gray-900 w-1/3 text-center block">
-                {detalleVariedad?.jornalesTotales} jornales
+                {(detalleVariedad?.jornalesTotales ?? 0).toFixed(2)} jornales
               </span>
               <span className="text-gray-900 w-1/3 text-end block">
                 {total} jornales/ha
@@ -193,6 +194,31 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center mb-6">
+          <button onClick={onBack} className="text-gray-600 hover:text-gray-800 mr-4">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-800">
+              {report.nombre}
+              {report.tipoReporte === 'VARIEDAD' && ' - '}
+              {report.cuartel?.nombre}
+            </h2>
+            <p className="text-gray-500">Temporada {report.anio} - {parseInt(report.anio) + 1}</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <TableShimmer columns={[50, 50]} rows={2} />
+          <TableShimmer columns={[40, 30, 30]} rows={4} />
+          <TableShimmer columns={[40, 30, 30]} rows={4} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center space-x-4 mb-6">
@@ -210,7 +236,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
               {report.cuartel?.nombre} 
             </h2>
             <p className="text-gray-500">
-              Reporte del año {report.anio}
+              Temporada {report.anio} - {parseInt(report.anio) + 1}
             </p>
           </div>
         </span>
@@ -244,7 +270,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div>
               <p className="text-sm font-medium text-gray-500">Hectáreas</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {detalleVariedad?.superficie}
+                {detalleVariedad?.superficie?.toFixed(2)}
               </p>
             </div>
             <div>

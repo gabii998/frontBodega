@@ -10,6 +10,11 @@ import Title from '../common/Title';
 import ErrorBanner from '../common/ErrorBanner';
 import { ReporteResponse } from '../model/ReporteCuartel';
 
+const formatTemporada = (anio: string | number) => {
+  const y = parseInt(anio.toString());
+  return `${y} - ${y + 1}`;
+};
+
 const AnimatedVarietyRows = ({
   varieties,
   isExpanded,
@@ -52,7 +57,7 @@ const AnimatedVarietyRows = ({
                 <div className="font-medium text-gray-700">
                   • {variety.nombre}
                 </div>
-                <div className="text-sm text-gray-500 ml-2">{variety.superficie} hectáreas</div>
+                <div className="text-sm text-gray-500 ml-2">{variety.superficie?.toFixed(2)} hectáreas</div>
               </div>
             </div>
           </div>
@@ -69,7 +74,7 @@ const AnimatedVarietyRows = ({
           </div>
           <div className="px-6 py-4 w-1/6">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
-              {variety.rendimiento} qq/Ha
+              {variety.rendimiento?.toFixed(2)} qq/Ha
             </span>
           </div>
           <div className="px-6 py-4 w-1/6">
@@ -137,10 +142,6 @@ const ReportsTable = () => {
     }
   };
 
-  const formatTemporada = (anio: string | number) => {
-    const y = parseInt(anio.toString());
-    return `${y} - ${y + 1}`;
-  };
 
   const toggleExpansion = (cuartelId: number | null | undefined, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -203,7 +204,7 @@ const ReportsTable = () => {
         </div>
         <div className="px-6 py-4 w-1/6">
           <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
-            {cuartel.rendimiento} qq/Ha
+            {cuartel.rendimiento?.toFixed(2)} qq/Ha
           </span>
         </div>
         <div className="px-6 py-4 w-1/6">
@@ -286,7 +287,7 @@ const ReportsTable = () => {
         </div>
         <div className="px-6 py-4 w-1/6">
           <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
-          {cuartel.rendimiento != null ? (cuartel.rendimiento + ' qq/Ha') : "-"}
+          {cuartel.rendimiento != null ? (cuartel.rendimiento.toFixed(2) + ' qq/Ha') : "-"}
           </span>
         </div>
         <div className="px-6 py-4 w-1/6">

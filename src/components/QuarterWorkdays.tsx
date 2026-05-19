@@ -203,7 +203,7 @@ const QuarterWorkdays = () => {
             <Title title={getTitle()}/>
             {quarter.superficieTotal && (
               <p className="text-sm text-gray-500">
-                Superficie: {quarter.superficieTotal} hectáreas
+                Superficie: {quarter.superficieTotal?.toFixed(2)} hectáreas
               </p>
             )}
           </div>

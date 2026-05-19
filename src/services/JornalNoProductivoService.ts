@@ -1,6 +1,14 @@
 import axios from 'axios';
 import JornalNoProductivo from '../model/JornalNoProductivo';
 
+const parseFecha = (fecha: string): Date => {
+  const [year, month, day] = fecha.split('-').map(Number);
+  if (!year || !month || !day || year < 2000 || year > 2100) {
+    throw new Error(`Fecha inválida: "${fecha}"`);
+  }
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+};
+
 export const jornalNoProductivoService = {
   async listAll(idFarm:number): Promise<JornalNoProductivo[]> {
     const response = await axios.get<JornalNoProductivo[]>(`/api/jornalesnp/finca/${idFarm}`);
@@ -10,9 +18,7 @@ export const jornalNoProductivoService = {
     }));
   },
   async create(workday: JornalNoProductivo): Promise<JornalNoProductivo> {
-    const [year, month, day] = workday.fecha.split('-').map(Number);
-    const fechaUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-    workday.fecha = fechaUTC.toISOString();
+    workday.fecha = parseFecha(workday.fecha).toISOString();
     const response = await axios.post<JornalNoProductivo>('/api/jornalesnp', workday);
     return {
       ...response.data,
@@ -21,9 +27,7 @@ export const jornalNoProductivoService = {
   },
 
   async update(workday: JornalNoProductivo): Promise<JornalNoProductivo> {
-    const [year, month, day] = workday.fecha.split('-').map(Number);
-    const fechaUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-    workday.fecha = fechaUTC.toISOString();
+    workday.fecha = parseFecha(workday.fecha).toISOString();
     const response = await axios.put<JornalNoProductivo>(`/api/jornalesnp/${workday.id}`, workday);
     return {
       ...response.data,
