@@ -22,7 +22,9 @@ const EmployeeTable = () => {
   const [toast, setToast] = useState<ToastProps | null>(null);
 
   useEffect(() => {
-    fetchEmployees();
+    if (activeFarm) {
+      fetchEmployees();
+    }
   }, [activeFarm]);
 
   const fetchEmployees = async () => {

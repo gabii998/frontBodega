@@ -24,8 +24,10 @@ const JornalesNoProductivos = () => {
     const [toast, setToast] = useState<ToastProps | null>(null);
 
     useEffect(() => {
-        fetchJornales();
-        fetchEmployees();
+        if (activeFarm) {
+            fetchJornales();
+            fetchEmployees();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFarm])
 
