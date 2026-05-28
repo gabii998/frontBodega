@@ -112,7 +112,7 @@ export const generateReportPDF = ({
         addMultiAlignedText([
                 { text: `Total Tareas Mecanicas`, align: 'left' },
                 { text: `${detalleVariedad?.jornalesMecanicos.toFixed(2)}`, align: 'center' },
-                { text: `${detalleVariedad.jornalesMecanicos?.toFixed(2) || '0.00'}`, align: 'right' }
+                { text: `${(detalleVariedad.jornalesMecanicos / (report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
             ], margin, margin, 11);
     }
 
@@ -136,7 +136,7 @@ export const generateReportPDF = ({
         addMultiAlignedText([
                 { text: `Total Tareas Manuales`, align: 'left' },
                 { text: `${detalleVariedad?.jornalesManuales.toFixed(2)}`, align: 'center' },
-                { text: `${detalleVariedad?.jornalesManuales.toFixed(2) || '0.00'}`, align: 'right' }
+                { text: `${(detalleVariedad.jornalesManuales / (report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
             ], margin, margin, 11);
     }
     
