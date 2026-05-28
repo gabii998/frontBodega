@@ -10,6 +10,10 @@ const parseFecha = (fecha: string): Date => {
 };
 
 export const workdayService = {
+  async getAniosDisponiblesEstructura(fincaId: number): Promise<number[]> {
+    const response = await axios.get<number[]>(`/api/jornales/estructura/anios-disponibles/finca/${fincaId}`);
+    return response.data;
+  },
   async getByQuarter(quarterId: string): Promise<Workday[]> {
     const response = await axios.get<Workday[]>(`/api/jornales/${quarterId}`);
     return response.data.map(workday => ({

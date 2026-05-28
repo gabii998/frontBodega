@@ -10,11 +10,22 @@ const parseFecha = (fecha: string): Date => {
 };
 
 export const jornalNoProductivoService = {
+  async getAniosDisponibles(fincaId: number): Promise<number[]> {
+    const response = await axios.get<number[]>(`/api/jornalesnp/anios-disponibles/finca/${fincaId}`);
+    return response.data;
+  },
   async listAll(idFarm:number): Promise<JornalNoProductivo[]> {
     const response = await axios.get<JornalNoProductivo[]>(`/api/jornalesnp/finca/${idFarm}`);
     return response.data.map(workday => ({
       ...workday,
-      fecha: workday.fecha.split('T')[0] 
+      fecha: workday.fecha.split('T')[0]
+    }));
+  },
+  async listByYear(idFarm: number, year: number): Promise<JornalNoProductivo[]> {
+    const response = await axios.get<JornalNoProductivo[]>(`/api/jornalesnp/finca/${idFarm}/anio/${year}`);
+    return response.data.map(workday => ({
+      ...workday,
+      fecha: workday.fecha.split('T')[0]
     }));
   },
   async create(workday: JornalNoProductivo): Promise<JornalNoProductivo> {

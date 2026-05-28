@@ -17,11 +17,14 @@ import TableTitle from "../common/TableTitle";
 import TableShimmer from "./TableShimmer";
 import { DeleteIcon, EditIcon } from "../common/IconButtons";
 
+const formatTemporada = (anio: number) => `${anio} - ${anio + 1}`;
+
 const StructureTable = () => {
     const navigate = useNavigate();
     const { activeFarm } = useFarm();
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+    const [availableYears, setAvailableYears] = useState<number[]>([]);
     const [workdays, setWorkdays] = useState<Workday[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -35,6 +38,12 @@ const StructureTable = () => {
         if (!activeFarm) return;
         fetchEmployees();
         fetchTasks();
+        workdayService.getAniosDisponiblesEstructura(activeFarm.id).then((years: number[]) => {
+            setAvailableYears(years);
+            if (years.length > 0) setSelectedYear(years[0]);
+        }).catch(() => {
+            setAvailableYears([currentYear]);
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFarm]);
 
@@ -189,10 +198,14 @@ const StructureTable = () => {
                     className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
                     value={selectedYear}
                     onChange={(event) => setSelectedYear(Number(event.target.value))}
+                    disabled={availableYears.length === 0}
                 >
-                    {Array.from({ length: 6 }, (_, index) => currentYear - index).map((year) => (
+                    {availableYears.length === 0 && (
+                        <option value={currentYear}>{formatTemporada(currentYear)}</option>
+                    )}
+                    {availableYears.map((year) => (
                         <option key={year} value={year}>
-                            {year}
+                            {formatTemporada(year)}
                         </option>
                     ))}
                 </select>

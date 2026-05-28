@@ -14,8 +14,18 @@ import { DeleteIcon, EditIcon } from "../common/IconButtons";
 import ToastProps, { successToast } from "../model/ToastProps";
 import Toast from "./Toast";
 
+const formatTemporada = (anio: number) => `${anio} - ${anio + 1}`;
+
+const formatFecha = (fecha: string) => {
+    const [year, month, day] = fecha.split('-');
+    return `${day}/${month}/${year}`;
+};
+
 const JornalesNoProductivos = () => {
     const { activeFarm } = useFarm();
+    const currentYear = new Date().getFullYear();
+    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+    const [availableYears, setAvailableYears] = useState<number[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [jornales, setJornales] = useState<JornalNoProductivo[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -25,14 +35,26 @@ const JornalesNoProductivos = () => {
 
     useEffect(() => {
         if (activeFarm) {
-            fetchJornales();
             fetchEmployees();
+            jornalNoProductivoService.getAniosDisponibles(activeFarm.id).then((years: number[]) => {
+                setAvailableYears(years);
+                if (years.length > 0) setSelectedYear(years[0]);
+            }).catch(() => {
+                setAvailableYears([currentYear]);
+            });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeFarm])
+    }, [activeFarm]);
+
+    useEffect(() => {
+        if (activeFarm) {
+            fetchJornales();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeFarm, selectedYear]);
 
     const fetchJornales = wrap(async () => {
-        const result = await jornalNoProductivoService.listAll(activeFarm?.id ?? 0);
+        const result = await jornalNoProductivoService.listByYear(activeFarm?.id ?? 0, selectedYear);
         setJornales(result);
     }, 'Error al cargar jornales');
 
@@ -81,6 +103,7 @@ const JornalesNoProductivos = () => {
 
     const renderTableContent = (entity: JornalNoProductivo) => {
         return [
+            <div>{formatFecha(entity.fecha)}</div>,
             <div>{entity.nombreEmpleado}</div>,
             <div>{entity.jornales}</div>,
             <div className="flex space-x-3 justify-end">
@@ -100,11 +123,30 @@ const JornalesNoProductivos = () => {
             />
         )}
         <TableTitle handleBack={() => { }} onAddWorkday={onAddWorkday} title="Jornales no productivos" />
+        <div className="flex items-center justify-end mb-4">
+            <label className="text-sm text-gray-600 mr-2" htmlFor="np-year">
+                Temporada
+            </label>
+            <select
+                id="np-year"
+                className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                disabled={availableYears.length === 0}
+            >
+                {availableYears.length === 0 && (
+                    <option value={currentYear}>{formatTemporada(currentYear)}</option>
+                )}
+                {availableYears.map((year) => (
+                    <option key={year} value={year}>{formatTemporada(year)}</option>
+                ))}
+            </select>
+        </div>
         {error != null && error.length > 0 && <ErrorBanner error={error} retry={fetchJornales} />}
-        {loading && <TableShimmer columns={[30, 20, 15, 20, 15]} rows={4} />}
+        {loading && <TableShimmer columns={[20, 30, 15, 20, 15]} rows={4} />}
         <div>
             <Table
-                header={['Nombre del empleado', 'Jornales', 'Acciones']}
+                header={['Fecha', 'Nombre del empleado', 'Jornales', 'Acciones']}
                 emptyMessage={() => 'No hay jornales registrados en esta seccion.'}
                 data={jornales}
                 content={renderTableContent} />
