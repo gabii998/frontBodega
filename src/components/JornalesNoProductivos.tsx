@@ -29,7 +29,7 @@ const JornalesNoProductivos = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [jornales, setJornales] = useState<JornalNoProductivo[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const { error, loading, wrap } = useLoadingError();
+    const { error, loading, setLoading, wrap } = useLoadingError();
     const [selectedJornal, setSelectedJornal] = useState<JornalNoProductivo | null>(null);
     const [toast, setToast] = useState<ToastProps | null>(null);
 
@@ -38,11 +38,17 @@ const JornalesNoProductivos = () => {
             fetchEmployees();
             setSelectedYear(null);
             setAvailableYears([]);
+            setLoading(true);
             jornalNoProductivoService.getAniosDisponibles(activeFarm.id).then((years: number[]) => {
                 setAvailableYears(years);
-                if (years.length > 0) setSelectedYear(years[0]);
+                if (years.length > 0) {
+                    setSelectedYear(years[0]);
+                } else {
+                    setLoading(false);
+                }
             }).catch(() => {
                 setAvailableYears([]);
+                setLoading(false);
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

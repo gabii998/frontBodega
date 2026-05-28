@@ -27,7 +27,7 @@ const StructureTable = () => {
     const [workdays, setWorkdays] = useState<Workday[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastProps | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -41,9 +41,14 @@ const StructureTable = () => {
         setAvailableYears([]);
         workdayService.getAniosDisponiblesEstructura(activeFarm.id).then((years: number[]) => {
             setAvailableYears(years);
-            if (years.length > 0) setSelectedYear(years[0]);
+            if (years.length > 0) {
+                setSelectedYear(years[0]);
+            } else {
+                setIsLoading(false);
+            }
         }).catch(() => {
             setAvailableYears([]);
+            setIsLoading(false);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFarm]);

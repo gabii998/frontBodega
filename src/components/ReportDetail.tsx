@@ -141,6 +141,10 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   const renderGeneralSummary = (summary: IndicadoresDto) => {
     const summaryFields: SummaryFields[] = [
+      ...(report.tipoReporte === 'GENERAL' ? [
+        { key: 'estructura' as const, label: 'Estructura General', suffix: 'jornales' },
+        { key: 'jornalesNoProductivos' as const, label: 'Jornales No Productivos', suffix: 'jornales' },
+      ] : []),
       { key: 'rendimiento', label: 'Rendimiento', suffix: 'qq/ha' },
       { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
     ];
