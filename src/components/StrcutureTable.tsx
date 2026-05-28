@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Title from "../common/Title";
 import Toast from "./Toast";
 import Table from "../common/Table";
-import Workday from "../model/Workday";
+import { Workday } from "../model/Workday";
 import ToastProps, { errorToast, successToast } from "../model/ToastProps";
 import { workdayService } from "../services/WorkdayService";
 import { useFarm } from "../context/FarmContext";
@@ -22,8 +22,7 @@ const formatTemporada = (anio: number) => `${anio} - ${anio + 1}`;
 const StructureTable = () => {
     const navigate = useNavigate();
     const { activeFarm } = useFarm();
-    const currentYear = new Date().getFullYear();
-    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+    const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [availableYears, setAvailableYears] = useState<number[]>([]);
     const [workdays, setWorkdays] = useState<Workday[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -38,17 +37,19 @@ const StructureTable = () => {
         if (!activeFarm) return;
         fetchEmployees();
         fetchTasks();
+        setSelectedYear(null);
+        setAvailableYears([]);
         workdayService.getAniosDisponiblesEstructura(activeFarm.id).then((years: number[]) => {
             setAvailableYears(years);
             if (years.length > 0) setSelectedYear(years[0]);
         }).catch(() => {
-            setAvailableYears([currentYear]);
+            setAvailableYears([]);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFarm]);
 
     useEffect(() => {
-        if (!activeFarm) return;
+        if (!activeFarm || selectedYear === null) return;
         fetchWorkdays(selectedYear);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFarm, selectedYear]);
@@ -114,8 +115,9 @@ const StructureTable = () => {
       };
 
     const tableBody = (w: Workday) => {
+        const [year, month, day] = w.fecha.split('-');
         return [
-            <div>{w.fecha}</div>,
+            <div>{`${day}/${month}/${year}`}</div>,
             <div className="text-center">{w.empleadoNombre}</div>,
             <div className="justify-center text-center">{w.tareaNombre}</div>,
             <div className="justify-center text-center">
@@ -196,12 +198,12 @@ const StructureTable = () => {
                 <select
                     id="structure-year"
                     className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-                    value={selectedYear}
+                    value={selectedYear ?? ''}
                     onChange={(event) => setSelectedYear(Number(event.target.value))}
                     disabled={availableYears.length === 0}
                 >
                     {availableYears.length === 0 && (
-                        <option value={currentYear}>{formatTemporada(currentYear)}</option>
+                        <option value="">Sin periodos disponibles</option>
                     )}
                     {availableYears.map((year) => (
                         <option key={year} value={year}>

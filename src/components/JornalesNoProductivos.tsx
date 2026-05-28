@@ -24,7 +24,7 @@ const formatFecha = (fecha: string) => {
 const JornalesNoProductivos = () => {
     const { activeFarm } = useFarm();
     const currentYear = new Date().getFullYear();
-    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+    const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [availableYears, setAvailableYears] = useState<number[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [jornales, setJornales] = useState<JornalNoProductivo[]>([]);
@@ -36,18 +36,20 @@ const JornalesNoProductivos = () => {
     useEffect(() => {
         if (activeFarm) {
             fetchEmployees();
+            setSelectedYear(null);
+            setAvailableYears([]);
             jornalNoProductivoService.getAniosDisponibles(activeFarm.id).then((years: number[]) => {
                 setAvailableYears(years);
                 if (years.length > 0) setSelectedYear(years[0]);
             }).catch(() => {
-                setAvailableYears([currentYear]);
+                setAvailableYears([]);
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFarm]);
 
     useEffect(() => {
-        if (activeFarm) {
+        if (activeFarm && selectedYear !== null) {
             fetchJornales();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,12 +132,12 @@ const JornalesNoProductivos = () => {
             <select
                 id="np-year"
                 className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-                value={selectedYear}
+                value={selectedYear ?? ''}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                 disabled={availableYears.length === 0}
             >
                 {availableYears.length === 0 && (
-                    <option value={currentYear}>{formatTemporada(currentYear)}</option>
+                    <option value="">Sin periodos disponibles</option>
                 )}
                 {availableYears.map((year) => (
                     <option key={year} value={year}>{formatTemporada(year)}</option>
