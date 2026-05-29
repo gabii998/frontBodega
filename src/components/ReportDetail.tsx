@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
+import { fmtNum } from '../utils/format';
 import { Users, PenTool as Tool, ArrowLeft, BarChart, Edit, Download } from 'lucide-react';
 import SummaryModal from './SummaryModal';
 import ReportDetailProps from '../model/ReportDetailProps';
 import DetalleVariedad from '../model/DetalleVariedad';
-import SummaryFields from '../model/SummaryFields';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Toast from './Toast';
 import { generateReportPDF } from '../utils/pdfGenerator';
@@ -113,10 +113,10 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium text-gray-900 w-1/3">{task.nombreTarea}</span>
                   <span className="text-sm text-gray-500 w-1/3 text-center block">
-                    {(task.jornales).toFixed(2)} Jornales
+                    {fmtNum(task.jornales)} Jornales
                   </span>
                   <span className="text-sm text-gray-500 w-1/3 text-right block">
-                    {(task.jornales / (report.superficie ?? 1)).toFixed(2)} jornales/ha
+                    {fmtNum(task.jornales / (report.superficie ?? 1))} jornales/ha
                   </span>
                 </div>
 
@@ -127,10 +127,10 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div className="flex justify-between items-center font-medium">
               <span className="text-gray-900">Total Categoría</span>
               <span className="text-gray-900">
-                {totalTareas.toFixed(2)} Jornales
+                {fmtNum(totalTareas)} Jornales
               </span>
               <span className="text-gray-900">
-                {(totalPorHectarea).toFixed(2)} jornales/ha
+                {fmtNum(totalPorHectarea)} jornales/ha
               </span>
             </div>
           </div>
@@ -140,15 +140,39 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   };
 
   const renderGeneralSummary = (summary: IndicadoresDto) => {
-    const summaryFields: SummaryFields[] = [
-      ...(report.tipoReporte === 'GENERAL' ? [
-        { key: 'estructura' as const, label: 'Estructura General', suffix: 'jornales' },
-        { key: 'jornalesNoProductivos' as const, label: 'Jornales No Productivos', suffix: 'jornales' },
-      ] : []),
-      { key: 'rendimiento', label: 'Rendimiento', suffix: 'qq/ha' },
-      { key: 'quintalPorJornal', label: 'Quintales por jornales', suffix: 'qq/Jor' }
-    ];
-    const total = ((detalleVariedad?.jornalesTotales ?? 0) / (detalleVariedad?.superficie ?? 0)).toFixed(2);
+    const jornalesProductivos = detalleVariedad?.jornalesTotales ?? 0;
+    const totalJornales = report.tipoReporte === 'GENERAL'
+      ? jornalesProductivos + summary.estructura + summary.jornalesNoProductivos
+      : jornalesProductivos;
+    const superficie = detalleVariedad?.superficie ?? 1;
+
+    const renderPerHaRow = (label: string, value: number) => (
+      <div className="p-4">
+        <div className="flex justify-between items-center">
+          <span className="font-medium text-gray-900 w-1/3">{label}</span>
+          <span className="text-gray-900 w-1/3 text-center block">
+            {fmtNum(value)} jornales
+          </span>
+          <span className="text-gray-900 w-1/3 text-end block">
+            {fmtNum(value / superficie)} jornales/ha
+          </span>
+        </div>
+      </div>
+    );
+
+    const totalRow = (
+      <div className="p-4">
+        <div className="flex justify-between items-center">
+          <span className="font-medium text-gray-900 w-1/3">Total General:</span>
+          <span className="text-gray-900 w-1/3 text-center block">
+            {fmtNum(totalJornales)} jornales
+          </span>
+          <span className="text-gray-900 w-1/3 text-end block">
+            {fmtNum(totalJornales / superficie)} jornales/ha
+          </span>
+        </div>
+      </div>
+    );
 
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -172,27 +196,25 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           </button>
         </div>
         <div className="divide-y divide-gray-200">
+          {report.tipoReporte === 'GENERAL' && renderPerHaRow('Estructura General', summary.estructura)}
+          {report.tipoReporte === 'GENERAL' && renderPerHaRow('Jornales No Productivos', summary.jornalesNoProductivos)}
+          {totalRow}
           <div className="p-4">
             <div className="flex justify-between items-center">
-              <span className="font-medium text-gray-900 w-1/3">Total General:</span>
-              <span className="text-gray-900 w-1/3 text-center block">
-                {(detalleVariedad?.jornalesTotales ?? 0).toFixed(2)} jornales
-              </span>
-              <span className="text-gray-900 w-1/3 text-end block">
-                {total} jornales/ha
+              <span className="font-medium text-gray-900 w-1/3">Rendimiento</span>
+              <span className="text-gray-900 w-2/3 text-end block">
+                {fmtNum(summary.rendimiento)} qq/ha
               </span>
             </div>
           </div>
-          {summaryFields.map(({ key, label, suffix }) => (
-            <div key={key} className="p-4">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-gray-900">{label}</span>
-                <span className="text-gray-900">
-                  {summary[key].toFixed(2)} {suffix}
-                </span>
-              </div>
+          <div className="p-4">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gray-900 w-1/3">Quintales por jornales</span>
+              <span className="text-gray-900 w-2/3 text-end block">
+                {fmtNum(summary.quintalPorJornal)} qq/Jor
+              </span>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     );
@@ -274,13 +296,16 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
             <div>
               <p className="text-sm font-medium text-gray-500">Hectáreas</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {detalleVariedad?.superficie?.toFixed(2)}
+                {fmtNum(detalleVariedad?.superficie ?? 0)}
               </p>
             </div>
-            <div>
+            <div className="text-right">
               <p className="text-sm font-medium text-gray-500">Total Jornales</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {(detalleVariedad?.jornalesTotales ?? 0).toFixed(2)}
+                {fmtNum(
+                  (detalleVariedad?.jornalesTotales ?? 0) +
+                  (report.tipoReporte === 'GENERAL' ? generalSummary.estructura + generalSummary.jornalesNoProductivos : 0)
+                )}
               </p>
             </div>
           </div>

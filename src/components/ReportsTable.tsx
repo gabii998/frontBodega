@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { fmtNum } from '../utils/format';
 import { Calendar, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import TableShimmer from './TableShimmer';
 import ReportDetail from './ReportDetail';
@@ -57,7 +58,7 @@ const AnimatedVarietyRows = ({
                 <div className="font-medium text-gray-700">
                   • {variety.nombre}
                 </div>
-                <div className="text-sm text-gray-500 ml-2">{variety.superficie?.toFixed(2)} hectáreas</div>
+                <div className="text-sm text-gray-500 ml-2">{fmtNum(variety.superficie ?? 0)} hectáreas</div>
               </div>
             </div>
           </div>
@@ -69,12 +70,12 @@ const AnimatedVarietyRows = ({
           </div>
           <div className="px-6 py-4 text-gray-700 w-1/6">
             <div>
-              <div className="font-medium">{variety.jornales.toFixed(2)} jornales</div>
+              <div className="font-medium">{fmtNum(variety.jornales)} jornales</div>
             </div>
           </div>
           <div className="px-6 py-4 w-1/6">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
-              {variety.rendimiento?.toFixed(2)} qq/Ha
+              {fmtNum(variety.rendimiento ?? 0)} qq/Ha
             </span>
           </div>
           <div className="px-6 py-4 w-1/6">
@@ -187,7 +188,7 @@ const ReportsTable = () => {
               <div className="font-medium text-gray-900">
                 {cuartel.nombre}
               </div>
-              <div className="text-sm text-gray-500">{cuartel.superficie.toFixed(2)} hectáreas</div>
+              <div className="text-sm text-gray-500">{fmtNum(cuartel.superficie)} hectáreas</div>
             </div>
           </div>
         </div>
@@ -199,12 +200,12 @@ const ReportsTable = () => {
         </div>
         <div className="px-6 py-4 w-1/6">
           <div>
-            <div className="font-medium text-gray-900">{cuartel.jornales.toFixed(2)} jornales</div>
+            <div className="font-medium text-gray-900">{fmtNum(cuartel.jornales)} jornales</div>
           </div>
         </div>
         <div className="px-6 py-4 w-1/6">
           <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
-            {cuartel.rendimiento?.toFixed(2)} qq/Ha
+            {fmtNum(cuartel.rendimiento ?? 0)} qq/Ha
           </span>
         </div>
         <div className="px-6 py-4 w-1/6">
@@ -281,13 +282,13 @@ const ReportsTable = () => {
         <div className="px-6 py-4 w-1/6">
           <div>
             <div className="font-medium text-gray-900">
-              {cuartel.jornales.toFixed(2)} jornales
+              {fmtNum(cuartel.jornales)} jornales
             </div>
           </div>
         </div>
         <div className="px-6 py-4 w-1/6">
           <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 w-full`}>
-          {cuartel.rendimiento != null ? (cuartel.rendimiento.toFixed(2) + ' qq/Ha') : "-"}
+          {cuartel.rendimiento != null ? (fmtNum(cuartel.rendimiento) + ' qq/Ha') : "-"}
           </span>
         </div>
         <div className="px-6 py-4 w-1/6">

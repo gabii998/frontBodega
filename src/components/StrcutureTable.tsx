@@ -1,4 +1,5 @@
 import { ArrowLeft, Clock } from "lucide-react";
+import { fmtNum } from "../utils/format";
 import { useEffect, useState } from "react";
 import Title from "../common/Title";
 import Toast from "./Toast";
@@ -128,7 +129,7 @@ const StructureTable = () => {
             <div className="justify-center text-center">
                 <span className="inline-flex items-center">
                     <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                    {w.jornales.toFixed(2)}
+                    {fmtNum(w.jornales)}
                 </span>
                 </div>,
             <div className="flex space-x-2 justify-end">
@@ -196,26 +197,30 @@ const StructureTable = () => {
 
             <TableTitle handleBack={handleBack} onAddWorkday={onAddWorkday} title="Estructura General" />
 
-            <div className="flex items-center justify-end mb-4">
-                <label className="text-sm text-gray-600 mr-2" htmlFor="structure-year">
-                    Año
-                </label>
-                <select
-                    id="structure-year"
-                    className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-                    value={selectedYear ?? ''}
-                    onChange={(event) => setSelectedYear(Number(event.target.value))}
-                    disabled={availableYears.length === 0}
-                >
-                    {availableYears.length === 0 && (
-                        <option value="">Sin periodos disponibles</option>
-                    )}
-                    {availableYears.map((year) => (
-                        <option key={year} value={year}>
-                            {formatTemporada(year)}
-                        </option>
-                    ))}
-                </select>
+            <div className="flex items-center justify-between mb-4">
+                {selectedYear !== null
+                    ? <p className="text-sm text-gray-500">Total del período: <span className="font-semibold text-gray-700">{fmtNum(workdays.reduce((sum, w) => sum + w.jornales, 0))} jornales</span></p>
+                    : <span />
+                }
+                <div className="flex items-center">
+                    <label className="text-sm text-gray-600 mr-2" htmlFor="structure-year">Temporada</label>
+                    <select
+                        id="structure-year"
+                        className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+                        value={selectedYear ?? ''}
+                        onChange={(event) => setSelectedYear(Number(event.target.value))}
+                        disabled={availableYears.length === 0}
+                    >
+                        {availableYears.length === 0 && (
+                            <option value="">Sin periodos disponibles</option>
+                        )}
+                        {availableYears.map((year) => (
+                            <option key={year} value={year}>
+                                {formatTemporada(year)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             <div className="bg-white rounded-lg shadow overflow-hidden">

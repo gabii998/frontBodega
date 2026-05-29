@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fmtNum } from '../utils/format';
 import { Plus, Edit, Trash2, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TableShimmer from './TableShimmer';
@@ -120,7 +121,7 @@ const QuarterTable = () => {
       </div>,
       <div className='text-center'>{getSystemIcon(quarter.sistema)}</div>,
       <div className='text-center'>{quarter.encargadoNombre}</div>,
-      <div className='text-center'>{quarter.superficieTotal?.toFixed(2)} ha</div>,
+      <div className='text-center'>{fmtNum(quarter.superficieTotal ?? 0)} ha</div>,
       <div className='text-center'>{quarter.hileras}</div>,
       <div className="flex space-x-3 justify-end">
         <button

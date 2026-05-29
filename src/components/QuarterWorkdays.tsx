@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fmtNum } from '../utils/format';
 import { ArrowLeft, Plus, Clock, UserCheck, Edit, Trash2 } from 'lucide-react';
 import WorkdayModal from './WorkdayModal';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -203,7 +204,7 @@ const QuarterWorkdays = () => {
             <Title title={getTitle()}/>
             {quarter.superficieTotal && (
               <p className="text-sm text-gray-500">
-                Superficie: {quarter.superficieTotal?.toFixed(2)} hectáreas
+                Superficie: {fmtNum(quarter.superficieTotal ?? 0)} hectáreas
               </p>
             )}
           </div>
@@ -276,7 +277,7 @@ const QuarterWorkdays = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex items-center">
                       <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                      {workday.jornales.toFixed(2)}
+                      {fmtNum(workday.jornales)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fmtNum } from "../utils/format";
 import Table from "../common/Table";
 import JornalNoProductivo from "../model/JornalNoProductivo";
 import { jornalNoProductivoService } from "../services/JornalNoProductivoService";
@@ -10,6 +11,7 @@ import { employeeService } from "../services/employeeService";
 import { useLoadingError } from "../hooks/useLoadingError";
 import { Employee } from "../model/Employee";
 import JornalNoProdModal from "./JornalNoProdModal";
+import { Clock } from "lucide-react";
 import { DeleteIcon, EditIcon } from "../common/IconButtons";
 import ToastProps, { successToast } from "../model/ToastProps";
 import Toast from "./Toast";
@@ -112,8 +114,13 @@ const JornalesNoProductivos = () => {
     const renderTableContent = (entity: JornalNoProductivo) => {
         return [
             <div>{formatFecha(entity.fecha)}</div>,
-            <div>{entity.nombreEmpleado}</div>,
-            <div>{entity.jornales}</div>,
+            <div className="text-center">{entity.nombreEmpleado}</div>,
+            <div className="justify-center text-center">
+                <span className="inline-flex items-center">
+                    <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                    {fmtNum(entity.jornales)}
+                </span>
+            </div>,
             <div className="flex space-x-3 justify-end">
                 <EditIcon onClick={() => onEdit(entity)} label="Editar" />
                 <DeleteIcon onClick={() => onDelete(entity)} label="Eliminar" />
@@ -131,34 +138,38 @@ const JornalesNoProductivos = () => {
             />
         )}
         <TableTitle handleBack={() => { }} onAddWorkday={onAddWorkday} title="Jornales no productivos" />
-        <div className="flex items-center justify-end mb-4">
-            <label className="text-sm text-gray-600 mr-2" htmlFor="np-year">
-                Temporada
-            </label>
-            <select
-                id="np-year"
-                className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-                value={selectedYear ?? ''}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                disabled={availableYears.length === 0}
-            >
-                {availableYears.length === 0 && (
-                    <option value="">Sin periodos disponibles</option>
-                )}
-                {availableYears.map((year) => (
-                    <option key={year} value={year}>{formatTemporada(year)}</option>
-                ))}
-            </select>
+        <div className="flex items-center justify-between mb-4">
+            {selectedYear !== null
+                ? <p className="text-sm text-gray-500">Total del período: <span className="font-semibold text-gray-700">{fmtNum(jornales.reduce((sum, j) => sum + j.jornales, 0))} jornales</span></p>
+                : <span />
+            }
+            <div className="flex items-center">
+                <label className="text-sm text-gray-600 mr-2" htmlFor="np-year">Temporada</label>
+                <select
+                    id="np-year"
+                    className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+                    value={selectedYear ?? ''}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    disabled={availableYears.length === 0}
+                >
+                    {availableYears.length === 0 && (
+                        <option value="">Sin periodos disponibles</option>
+                    )}
+                    {availableYears.map((year) => (
+                        <option key={year} value={year}>{formatTemporada(year)}</option>
+                    ))}
+                </select>
+            </div>
         </div>
         {error != null && error.length > 0 && <ErrorBanner error={error} retry={fetchJornales} />}
-        {loading && <TableShimmer columns={[20, 30, 15, 20, 15]} rows={4} />}
-        <div>
-            <Table
+        {loading
+            ? <TableShimmer columns={[20, 30, 15, 20, 15]} rows={4} />
+            : <Table
                 header={['Fecha', 'Nombre del empleado', 'Jornales', 'Acciones']}
                 emptyMessage={() => 'No hay jornales registrados en esta seccion.'}
                 data={jornales}
                 content={renderTableContent} />
-        </div>
+        }
         {isModalOpen && <JornalNoProdModal
             employees={employees}
             jornal={selectedJornal}

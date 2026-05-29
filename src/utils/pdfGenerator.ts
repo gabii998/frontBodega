@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import DetalleVariedad from '../model/DetalleVariedad';
 import IndicadoresDto from '../model/IndicadoresDto';
 import { ReporteResponse } from '../model/ReporteCuartel';
+import { fmtNum } from './format';
 
 interface GeneratePDFParams {
     report: ReporteResponse;
@@ -84,7 +85,7 @@ export const generateReportPDF = ({
 
     addMultiAlignedText([
         { text: nombreVariedad, align: 'left' },
-        { text: `Superficie: ${detalleVariedad?.superficie} hectáreas`, align: 'right' }
+        { text: `Superficie: ${fmtNum(detalleVariedad?.superficie ?? 0)} hectáreas`, align: 'right' }
     ], margin, margin, 12);
 
     addMultiAlignedText([
@@ -102,8 +103,8 @@ export const generateReportPDF = ({
         detalleVariedad?.tareasMecanicas.forEach(task => {
             addMultiAlignedText([
                 { text: `${task.nombreTarea}`, align: 'left' },
-                { text: `${task.jornales}`, align: 'center' },
-                { text: `${(task.jornales/(report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
+                { text: fmtNum(task.jornales), align: 'center' },
+                { text: fmtNum(task.jornales/(report.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
             yPosition += 1;
         });
@@ -111,8 +112,8 @@ export const generateReportPDF = ({
         doc.setFont(undefined, 'bold');
         addMultiAlignedText([
                 { text: `Total Tareas Mecanicas`, align: 'left' },
-                { text: `${detalleVariedad?.jornalesMecanicos.toFixed(2)}`, align: 'center' },
-                { text: `${(detalleVariedad.jornalesMecanicos / (report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
+                { text: fmtNum(detalleVariedad?.jornalesMecanicos), align: 'center' },
+                { text: fmtNum(detalleVariedad.jornalesMecanicos / (report.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
     }
 
@@ -126,8 +127,8 @@ export const generateReportPDF = ({
         detalleVariedad?.tareasManuales.forEach(task => {
             addMultiAlignedText([
                 { text: `${task.nombreTarea}`, align: 'left' },
-                { text: `${task.jornales}`, align: 'center' },
-                { text: `${(task.jornales/(report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
+                { text: fmtNum(task.jornales), align: 'center' },
+                { text: fmtNum(task.jornales/(report.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
             yPosition += 1;
         });
@@ -135,8 +136,8 @@ export const generateReportPDF = ({
         doc.setFont(undefined, 'bold');
         addMultiAlignedText([
                 { text: `Total Tareas Manuales`, align: 'left' },
-                { text: `${detalleVariedad?.jornalesManuales.toFixed(2)}`, align: 'center' },
-                { text: `${(detalleVariedad.jornalesManuales / (report.superficie ?? 1)).toFixed(2)}`, align: 'right' }
+                { text: fmtNum(detalleVariedad?.jornalesManuales), align: 'center' },
+                { text: fmtNum(detalleVariedad.jornalesManuales / (report.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
     }
     
@@ -144,17 +145,34 @@ export const generateReportPDF = ({
     // Indicadores
     addSeparator();
 
-    addText(`Total General: ${detalleVariedad?.jornalesTotales} jornales`,11,true);
+    const jornalesProductivos = detalleVariedad?.jornalesTotales ?? 0;
+    const totalJornales = report.tipoReporte === 'GENERAL'
+        ? jornalesProductivos + generalSummary.estructura + generalSummary.jornalesNoProductivos
+        : jornalesProductivos;
 
-    // if (!report.esVariedad) {
-    //     addText(`Estructura: ${generalSummary.structure} jornales`);
-    //     addText(`Total Productivos: ${generalSummary.productiveTotal} jornales`);
-    //     addText(`Jornales No Productivos: ${generalSummary.nonProductiveWorkdays} jornales`);
-    //     addText(`Total Jornales Pagados: ${generalSummary.totalPaidWorkdays} jornales`);
-    // }
+    const superficie = detalleVariedad?.superficie ?? 1;
 
-    addText(`Rendimiento: ${generalSummary.rendimiento} qq/ha`,11,true);
-    addText(`Quintales por Jornal: ${generalSummary.quintalPorJornal.toFixed(2)} qq/Jor`,11,true);
+    if (report.tipoReporte === 'GENERAL') {
+        addMultiAlignedText([
+            { text: 'Estructura General', align: 'left' },
+            { text: `${fmtNum(generalSummary.estructura)} jornales`, align: 'center' },
+            { text: `${fmtNum(generalSummary.estructura / superficie)} jornales/ha`, align: 'right' }
+        ], margin, margin, 11);
+        addMultiAlignedText([
+            { text: 'Jornales No Productivos', align: 'left' },
+            { text: `${fmtNum(generalSummary.jornalesNoProductivos)} jornales`, align: 'center' },
+            { text: `${fmtNum(generalSummary.jornalesNoProductivos / superficie)} jornales/ha`, align: 'right' }
+        ], margin, margin, 11);
+    }
+
+    addMultiAlignedText([
+        { text: 'Total General', align: 'left' },
+        { text: `${fmtNum(totalJornales)} jornales`, align: 'center' },
+        { text: `${fmtNum(totalJornales / superficie)} jornales/ha`, align: 'right' }
+    ], margin, margin, 11);
+
+    addText(`Rendimiento: ${fmtNum(generalSummary.rendimiento)} qq/ha`, 11, true);
+    addText(`Quintales por Jornal: ${fmtNum(generalSummary.quintalPorJornal)} qq/Jor`, 11, true);
 
     // Pie de página
     yPosition = 270;
