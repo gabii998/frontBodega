@@ -80,7 +80,8 @@ export const generateReportPDF = ({
         yPosition += 10;
     };
 
-    addText(`Cuartel: ${report.nombre}`, 12, true);
+    const nombreCuartel = report.tipoReporte == 'VARIEDAD' ? report.cuartel?.nombre ?? '' : report.nombre;
+    addText(`Cuartel: ${nombreCuartel}`, 12, true);
     const nombreVariedad = report.tipoReporte == 'VARIEDAD' ? `Variedad: ${report.nombre}` : 'Resumen de cuartel';
 
     addMultiAlignedText([
@@ -104,7 +105,7 @@ export const generateReportPDF = ({
             addMultiAlignedText([
                 { text: `${task.nombreTarea}`, align: 'left' },
                 { text: fmtNum(task.jornales), align: 'center' },
-                { text: fmtNum(task.jornales/(report.superficie ?? 1)), align: 'right' }
+                { text: fmtNum(task.jornales / (detalleVariedad?.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
             yPosition += 1;
         });
@@ -113,7 +114,7 @@ export const generateReportPDF = ({
         addMultiAlignedText([
                 { text: `Total Tareas Mecanicas`, align: 'left' },
                 { text: fmtNum(detalleVariedad?.jornalesMecanicos), align: 'center' },
-                { text: fmtNum(detalleVariedad.jornalesMecanicos / (report.superficie ?? 1)), align: 'right' }
+                { text: fmtNum(detalleVariedad.jornalesMecanicos / (detalleVariedad?.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
     }
 
@@ -128,7 +129,7 @@ export const generateReportPDF = ({
             addMultiAlignedText([
                 { text: `${task.nombreTarea}`, align: 'left' },
                 { text: fmtNum(task.jornales), align: 'center' },
-                { text: fmtNum(task.jornales/(report.superficie ?? 1)), align: 'right' }
+                { text: fmtNum(task.jornales / (detalleVariedad?.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
             yPosition += 1;
         });
@@ -137,7 +138,7 @@ export const generateReportPDF = ({
         addMultiAlignedText([
                 { text: `Total Tareas Manuales`, align: 'left' },
                 { text: fmtNum(detalleVariedad?.jornalesManuales), align: 'center' },
-                { text: fmtNum(detalleVariedad.jornalesManuales / (report.superficie ?? 1)), align: 'right' }
+                { text: fmtNum(detalleVariedad.jornalesManuales / (detalleVariedad?.superficie ?? 1)), align: 'right' }
             ], margin, margin, 11);
     }
     

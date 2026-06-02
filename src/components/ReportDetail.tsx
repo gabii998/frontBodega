@@ -72,11 +72,9 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
   const handleSaveSummary = async (newSummary: IndicadoresDto) => {
     setIsLoading(true);
     try {
-      const response = await reportService.updateIndicadores(report,newSummary,activeFarm?.id ?? -1);
-      if (response) {
-        setGeneralSummary(newSummary);
-        setToast(successToast('Indicadores actualizados correctamente'));
-      }
+      await reportService.updateIndicadores(report,newSummary,activeFarm?.id ?? -1);
+      await fetchIndicadores();
+      setToast(successToast('Indicadores actualizados correctamente'));
     } catch {
       setToast(errorToast('Error al guardar los indicadores'));
     } finally {
@@ -94,7 +92,8 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
     const title = type === 'manual' ? 'Tareas Manuales' : 'Tareas Mecánicas';
     const colorClass = type === 'manual' ? 'bg-indigo-50' : 'bg-orange-50';
     const totalTareas = (type === 'manual' ? detalleVariedad?.jornalesManuales : detalleVariedad?.jornalesMecanicos) ?? 0;
-    const totalPorHectarea = totalTareas / (detalleVariedad?.superficie ?? 0);
+    const superficie = detalleVariedad?.superficie ?? 1;
+    const totalPorHectarea = totalTareas / superficie;
 
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -116,7 +115,7 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
                     {fmtNum(task.jornales)} Jornales
                   </span>
                   <span className="text-sm text-gray-500 w-1/3 text-right block">
-                    {fmtNum(task.jornales / (report.superficie ?? 1))} jornales/ha
+                    {fmtNum(task.jornales / superficie)} jornales/ha
                   </span>
                 </div>
 
