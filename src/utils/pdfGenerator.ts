@@ -10,6 +10,11 @@ interface GeneratePDFParams {
     generalSummary: IndicadoresDto;
 }
 
+const formatTemporada = (anio: string | number) => {
+    const y = parseInt(anio.toString());
+    return `${y} - ${y + 1}`;
+};
+
 export const generateReportPDF = ({
     report,
     detalleVariedad,
@@ -80,19 +85,28 @@ export const generateReportPDF = ({
         yPosition += 6;
     };
 
-    const nombreCuartel = report.tipoReporte == 'VARIEDAD' ? report.cuartel?.nombre ?? '' : report.nombre;
-    addText(`Cuartel: ${nombreCuartel}`, 12, true);
-    const nombreVariedad = report.tipoReporte == 'VARIEDAD' ? `Variedad: ${report.nombre}` : 'Resumen de cuartel';
-
-    addMultiAlignedText([
-        { text: nombreVariedad, align: 'left' },
-        { text: `Superficie: ${fmtNum(detalleVariedad?.superficie ?? 0)} hectáreas`, align: 'right' }
-    ], margin, margin, 12);
-
-    addMultiAlignedText([
-        { text: `Año: ${report.anio}`, align: 'left' },
-        { text: `${detalleVariedad?.hileras ?? 0} hileras`, align: 'right' }
-    ], margin, margin, 12);
+    if (report.tipoReporte === 'GENERAL' || report.tipoReporte === 'ESPALDERO' || report.tipoReporte === 'PARRAL') {
+        const titulo = report.tipoReporte === 'GENERAL' ? 'Resumen General'
+            : report.tipoReporte === 'ESPALDERO' ? 'Resumen de Espalderos'
+            : 'Resumen de Parrales';
+        addText(titulo, 12, true);
+        addMultiAlignedText([
+            { text: `Temporada: ${formatTemporada(report.anio)}`, align: 'left' },
+            { text: `Superficie: ${fmtNum(detalleVariedad?.superficie ?? 0)} hectáreas`, align: 'right' }
+        ], margin, margin, 12);
+    } else {
+        const nombreCuartel = report.tipoReporte == 'VARIEDAD' ? report.cuartel?.nombre ?? '' : report.nombre;
+        addText(`Cuartel: ${nombreCuartel}`, 12, true);
+        const nombreVariedad = report.tipoReporte == 'VARIEDAD' ? `Variedad: ${report.nombre}` : 'Resumen de cuartel';
+        addMultiAlignedText([
+            { text: nombreVariedad, align: 'left' },
+            { text: `Superficie: ${fmtNum(detalleVariedad?.superficie ?? 0)} hectáreas`, align: 'right' }
+        ], margin, margin, 12);
+        addMultiAlignedText([
+            { text: `Temporada: ${formatTemporada(report.anio)}`, align: 'left' },
+            { text: `${detalleVariedad?.hileras ?? 0} hileras`, align: 'right' }
+        ], margin, margin, 12);
+    }
 
 
     addSeparator();
