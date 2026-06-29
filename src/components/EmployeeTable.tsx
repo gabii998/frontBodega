@@ -6,7 +6,7 @@ import { Employee } from '../model/Employee';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import Toast from './Toast';
 import { apiCall } from '../utils/apiUtil';
-import { employeeService } from '../services/employeeService';
+import { employeeService } from '../services/EmployeeService';
 import Table from '../common/Table';
 import Title from '../common/Title';
 import ErrorBanner from '../common/ErrorBanner';

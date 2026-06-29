@@ -140,9 +140,8 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
 
   const renderGeneralSummary = (summary: IndicadoresDto) => {
     const jornalesProductivos = detalleVariedad?.jornalesTotales ?? 0;
-    const totalJornales = report.tipoReporte === 'GENERAL'
-      ? jornalesProductivos + summary.estructura + summary.jornalesNoProductivos
-      : jornalesProductivos;
+    const totalProductivo = jornalesProductivos + summary.estructura;
+    const jornalesPagados = totalProductivo + summary.jornalesNoProductivos;
     const superficie = detalleVariedad?.superficie ?? 1;
 
     const renderPerHaRow = (label: string, value: number) => (
@@ -154,20 +153,6 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           </span>
           <span className="text-gray-900 w-1/3 text-end block">
             {fmtNum(value / superficie)} jornales/ha
-          </span>
-        </div>
-      </div>
-    );
-
-    const totalRow = (
-      <div className="p-4">
-        <div className="flex justify-between items-center">
-          <span className="font-medium text-gray-900 w-1/3">Total General:</span>
-          <span className="text-gray-900 w-1/3 text-center block">
-            {fmtNum(totalJornales)} jornales
-          </span>
-          <span className="text-gray-900 w-1/3 text-end block">
-            {fmtNum(totalJornales / superficie)} jornales/ha
           </span>
         </div>
       </div>
@@ -195,9 +180,11 @@ const ReportDetail = ({ report, onBack }: ReportDetailProps) => {
           </button>
         </div>
         <div className="divide-y divide-gray-200">
-          {report.tipoReporte === 'GENERAL' && renderPerHaRow('Estructura General', summary.estructura)}
+          {renderPerHaRow('Total General', jornalesProductivos)}
+          {report.tipoReporte === 'GENERAL' && renderPerHaRow('Estructura', summary.estructura)}
+          {report.tipoReporte === 'GENERAL' && renderPerHaRow('Total Productivo', totalProductivo)}
           {report.tipoReporte === 'GENERAL' && renderPerHaRow('Jornales No Productivos', summary.jornalesNoProductivos)}
-          {totalRow}
+          {report.tipoReporte === 'GENERAL' && renderPerHaRow('Jornal Pagado', jornalesPagados)}
           <div className="p-4">
             <div className="flex justify-between items-center">
               <span className="font-medium text-gray-900 w-1/3">Rendimiento</span>

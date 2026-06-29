@@ -9,7 +9,7 @@ import { Quarter } from '../model/Quarter';
 import { Employee } from '../model/Employee';
 import Task from '../model/Task';
 import { quarterService } from '../services/QuarterService';
-import { employeeService } from '../services/employeeService';
+import { employeeService } from '../services/EmployeeService';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import { taskService } from '../services/TaskService';
 import { workdayService } from '../services/WorkdayService';

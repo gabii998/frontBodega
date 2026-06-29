@@ -11,7 +11,7 @@ import { useFarm } from "../context/FarmContext";
 import StructureWorkdayModal from "./StructureWorkdayModal";
 import Task from "../model/Task";
 import { Employee } from "../model/Employee";
-import { employeeService } from "../services/employeeService";
+import { employeeService } from "../services/EmployeeService";
 import { taskService } from "../services/TaskService";
 import { useNavigate } from "react-router-dom";
 import TableTitle from "../common/TableTitle";

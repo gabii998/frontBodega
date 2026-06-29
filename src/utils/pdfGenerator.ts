@@ -75,9 +75,9 @@ export const generateReportPDF = ({
 
     // Helper para añadir línea separadora
     const addSeparator = () => {
-        yPosition += 5;
+        yPosition -= 4;
         doc.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 10;
+        yPosition += 6;
     };
 
     const nombreCuartel = report.tipoReporte == 'VARIEDAD' ? report.cuartel?.nombre ?? '' : report.nombre;
@@ -147,30 +147,39 @@ export const generateReportPDF = ({
     addSeparator();
 
     const jornalesProductivos = detalleVariedad?.jornalesTotales ?? 0;
-    const totalJornales = report.tipoReporte === 'GENERAL'
-        ? jornalesProductivos + generalSummary.estructura + generalSummary.jornalesNoProductivos
-        : jornalesProductivos;
+    const totalProductivo = jornalesProductivos + generalSummary.estructura;
+    const jornalesPagados = totalProductivo + generalSummary.jornalesNoProductivos;
 
     const superficie = detalleVariedad?.superficie ?? 1;
 
+    addMultiAlignedText([
+        { text: 'Total General', align: 'left' },
+        { text: `${fmtNum(jornalesProductivos)} jornales`, align: 'center' },
+        { text: `${fmtNum(jornalesProductivos / superficie)} jornales/ha`, align: 'right' }
+    ], margin, margin, 11);
+
     if (report.tipoReporte === 'GENERAL') {
         addMultiAlignedText([
-            { text: 'Estructura General', align: 'left' },
+            { text: 'Estructura', align: 'left' },
             { text: `${fmtNum(generalSummary.estructura)} jornales`, align: 'center' },
             { text: `${fmtNum(generalSummary.estructura / superficie)} jornales/ha`, align: 'right' }
+        ], margin, margin, 11);
+        addMultiAlignedText([
+            { text: 'Total Productivo', align: 'left' },
+            { text: `${fmtNum(totalProductivo)} jornales`, align: 'center' },
+            { text: `${fmtNum(totalProductivo / superficie)} jornales/ha`, align: 'right' }
         ], margin, margin, 11);
         addMultiAlignedText([
             { text: 'Jornales No Productivos', align: 'left' },
             { text: `${fmtNum(generalSummary.jornalesNoProductivos)} jornales`, align: 'center' },
             { text: `${fmtNum(generalSummary.jornalesNoProductivos / superficie)} jornales/ha`, align: 'right' }
         ], margin, margin, 11);
+        addMultiAlignedText([
+            { text: 'Jornal Pagado', align: 'left' },
+            { text: `${fmtNum(jornalesPagados)} jornales`, align: 'center' },
+            { text: `${fmtNum(jornalesPagados / superficie)} jornales/ha`, align: 'right' }
+        ], margin, margin, 11);
     }
-
-    addMultiAlignedText([
-        { text: 'Total General', align: 'left' },
-        { text: `${fmtNum(totalJornales)} jornales`, align: 'center' },
-        { text: `${fmtNum(totalJornales / superficie)} jornales/ha`, align: 'right' }
-    ], margin, margin, 11);
 
     addText(`Rendimiento: ${fmtNum(generalSummary.rendimiento)} qq/ha`, 11, true);
     addText(`Quintales por Jornal: ${fmtNum(generalSummary.quintalPorJornal)} qq/Jor`, 11, true);

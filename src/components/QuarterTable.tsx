@@ -11,7 +11,7 @@ import { Employee } from '../model/Employee';
 import ToastProps, { errorToast, successToast } from '../model/ToastProps';
 import { useFarm } from '../context/FarmContext';
 import { varietyService } from '../services/VarietyService';
-import { employeeService } from '../services/employeeService';
+import { employeeService } from '../services/EmployeeService';
 import { quarterService } from '../services/QuarterService';
 import Table from '../common/Table';
 import Title from '../common/Title';

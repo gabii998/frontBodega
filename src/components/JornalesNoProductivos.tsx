@@ -7,7 +7,7 @@ import { useFarm } from "../context/FarmContext";
 import ErrorBanner from "../common/ErrorBanner";
 import TableShimmer from "./TableShimmer";
 import TableTitle from "../common/TableTitle";
-import { employeeService } from "../services/employeeService";
+import { employeeService } from "../services/EmployeeService";
 import { useLoadingError } from "../hooks/useLoadingError";
 import { Employee } from "../model/Employee";
 import JornalNoProdModal from "./JornalNoProdModal";
